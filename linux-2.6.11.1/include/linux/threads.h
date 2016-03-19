@@ -25,6 +25,8 @@
 /*
  * This controls the default maximum pid allocated to a process
  */
+/* 设置可以给进程分配的最大进程号 
+ */
 #define PID_MAX_DEFAULT 0x8000
 
 /*

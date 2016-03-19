@@ -421,6 +421,8 @@ asm(	".section .text\n"
 /*
  * Create a kernel thread.
  */
+/* 创建一个内核级别的线程
+ */
 pid_t kernel_thread(int (*fn)(void *), void *arg, unsigned long flags)
 {
 	struct pt_regs regs;
@@ -432,7 +434,8 @@ pid_t kernel_thread(int (*fn)(void *), void *arg, unsigned long flags)
 	regs.ARM_r3 = (unsigned long)do_exit;
 	regs.ARM_pc = (unsigned long)kernel_thread_helper;
 	regs.ARM_cpsr = SVC_MODE;
-
+    
+	/* 最终其实调用的就是do_fork函数，创建一个内核的轻量级进程 */
 	return do_fork(flags|CLONE_VM|CLONE_UNTRACED, 0, &regs, 0, NULL, NULL);
 }
 EXPORT_SYMBOL(kernel_thread);

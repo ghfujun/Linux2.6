@@ -148,6 +148,7 @@ struct sched_param {
 extern rwlock_t tasklist_lock;
 extern spinlock_t mmlist_lock;
 
+/* task_struct的一个重新定义 */
 typedef struct task_struct task_t;
 
 extern void sched_init(void);

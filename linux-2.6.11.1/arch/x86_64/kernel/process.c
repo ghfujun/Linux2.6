@@ -585,6 +585,7 @@ void set_personality_64bit(void)
 	current->personality &= ~READ_IMPLIES_EXEC;
 }
 
+/* 创建新的进程 */
 asmlinkage long sys_fork(struct pt_regs *regs)
 {
 	return do_fork(SIGCHLD, regs->rsp, regs, 0, NULL, NULL);

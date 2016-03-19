@@ -1121,6 +1121,8 @@ static inline int fork_traceflag (unsigned clone_flags)
  * It copies the process, and if successful kick-starts
  * it and waits for it to finish using the VM if required.
  */
+/* 创建内核线程也会调用到这个函数
+ */
 long do_fork(unsigned long clone_flags,
 	      unsigned long stack_start,
 	      struct pt_regs *regs,

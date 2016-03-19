@@ -412,7 +412,7 @@ void __init parse_early_param(void)
 /*
  *	Activate the first processor.
  */
-
+/* 内核启动函数 */
 asmlinkage void __init start_kernel(void)
 {
 	char * command_line;

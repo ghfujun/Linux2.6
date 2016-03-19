@@ -34,12 +34,14 @@ static int pidhash_shift;
 int pid_max = PID_MAX_DEFAULT;
 int last_pid;
 
+/* 当在分配进程id时，如果超过了最大id号，则重新返回到这个地方 */
 #define RESERVED_PIDS		300
 
 int pid_max_min = RESERVED_PIDS + 1;
 int pid_max_max = PID_MAX_LIMIT;
 
 #define PIDMAP_ENTRIES		((PID_MAX_LIMIT + 8*PAGE_SIZE - 1)/PAGE_SIZE/8)
+/* 获取每页内存中二进制位的数量 */
 #define BITS_PER_PAGE		(PAGE_SIZE*8)
 #define BITS_PER_PAGE_MASK	(BITS_PER_PAGE-1)
 #define mk_pid(map, off)	(((map) - pidmap_array)*BITS_PER_PAGE + (off))
@@ -71,6 +73,7 @@ fastcall void free_pidmap(int pid)
 	atomic_inc(&map->nr_free);
 }
 
+/* 分配一个进程的pid */
 int alloc_pidmap(void)
 {
 	int i, offset, max_scan, pid, last = last_pid;

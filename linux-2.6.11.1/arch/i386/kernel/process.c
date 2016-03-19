@@ -626,6 +626,7 @@ struct task_struct fastcall * __switch_to(struct task_struct *prev_p, struct tas
 	return prev_p;
 }
 
+/* 创建进程操作 */
 asmlinkage int sys_fork(struct pt_regs regs)
 {
 	return do_fork(SIGCHLD, regs.esp, &regs, 0, NULL, NULL);

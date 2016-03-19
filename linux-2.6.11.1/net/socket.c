@@ -1179,6 +1179,7 @@ int sock_create_kern(int family, int type, int protocol, struct socket **res)
 	return __sock_create(family, type, protocol, res, 1);
 }
 
+/* 系统调用函数，用来创建socket套接字 */
 asmlinkage long sys_socket(int family, int type, int protocol)
 {
 	int retval;
