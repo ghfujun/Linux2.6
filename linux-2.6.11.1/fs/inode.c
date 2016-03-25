@@ -70,6 +70,7 @@ static unsigned int i_hash_shift;
  * allowing for low-overhead inode sync() operations.
  */
 
+/* 记录inode正在使用和没有被使用的链表 */
 LIST_HEAD(inode_in_use);
 LIST_HEAD(inode_unused);
 static struct hlist_head *inode_hashtable;
@@ -80,6 +81,7 @@ static struct hlist_head *inode_hashtable;
  * NOTE! You also have to own the lock if you change
  * the i_state of an inode while it is in use..
  */
+/* 一个没有被锁住的锁 */
 DEFINE_SPINLOCK(inode_lock);
 
 /*
@@ -99,6 +101,7 @@ struct inodes_stat_t inodes_stat;
 
 static kmem_cache_t * inode_cachep;
 
+/* 从超级快中分配一个inode,然后设置inode的相关信息 */
 static struct inode *alloc_inode(struct super_block *sb)
 {
 	static struct address_space_operations empty_aops;
@@ -106,6 +109,8 @@ static struct inode *alloc_inode(struct super_block *sb)
 	static struct file_operations empty_fops;
 	struct inode *inode;
 
+	/* 如果超级块的alloc_inode函数指针不为空，则使用超级块来分配
+	 * 否则就直接从高速缓存中分配 */
 	if (sb->s_op->alloc_inode)
 		inode = sb->s_op->alloc_inode(sb);
 	else
@@ -556,6 +561,8 @@ repeat:
  *
  *	Allocates a new inode for given superblock.
  */
+/* 从超级块当中分配一个inode节点
+ * */
 struct inode *new_inode(struct super_block *sb)
 {
 	static unsigned long last_ino;

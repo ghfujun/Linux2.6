@@ -25,12 +25,14 @@
  * using the generic single-entry routines.
  */
 
+/* 一个非常重要的双向链表，在很多结构当中都有该链表的身影 */
 struct list_head {
 	struct list_head *next, *prev;
 };
 
 #define LIST_HEAD_INIT(name) { &(name), &(name) }
 
+/* 定义一个空的链表头 */
 #define LIST_HEAD(name) \
 	struct list_head name = LIST_HEAD_INIT(name)
 
@@ -488,10 +490,12 @@ static inline void list_splice_init(struct list_head *list,
  * You lose the ability to access the tail in O(1).
  */
 
+/* hash链表头部 */
 struct hlist_head {
 	struct hlist_node *first;
 };
 
+/* hash节点 */
 struct hlist_node {
 	struct hlist_node *next, **pprev;
 };

@@ -32,6 +32,7 @@
 /*
  * A maximum of 4 million PIDs should be enough for a while:
  */
+/* 根据不同情况来确定系统中可以分配给进程的最大序号 */
 #define PID_MAX_LIMIT (sizeof(long) > 4 ? 4*1024*1024 : PID_MAX_DEFAULT)
 
 #endif

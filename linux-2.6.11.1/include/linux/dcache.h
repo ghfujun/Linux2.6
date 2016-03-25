@@ -98,7 +98,7 @@ struct dentry {
 	struct list_head d_subdirs;	/* our children */
 	struct list_head d_alias;	/* inode alias list */
 	unsigned long d_time;		/* used by d_revalidate */
-	struct dentry_operations *d_op;
+	struct dentry_operations *d_op;/* 目录操作函数 */
 	struct super_block *d_sb;	/* The root of the dentry tree */
 	void *d_fsdata;			/* fs-specific data */
  	struct rcu_head d_rcu;

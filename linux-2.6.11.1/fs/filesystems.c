@@ -27,6 +27,7 @@
  *	Once the reference is obtained we can drop the spinlock.
  */
 
+/* 系统重文件系统的全局变量 */
 static struct file_system_type *file_systems;
 static DEFINE_RWLOCK(file_systems_lock);
 
@@ -41,6 +42,7 @@ void put_filesystem(struct file_system_type *fs)
 	module_put(fs->owner);
 }
 
+/* 返回名称为name的file_system_type */
 static struct file_system_type **find_filesystem(const char *name)
 {
 	struct file_system_type **p;
@@ -63,6 +65,7 @@ static struct file_system_type **find_filesystem(const char *name)
  *	unregistered.
  */
  
+/* 注册一个文件系统 */
 int register_filesystem(struct file_system_type * fs)
 {
 	int res = 0;

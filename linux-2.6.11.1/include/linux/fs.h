@@ -423,12 +423,13 @@ static inline int mapping_writably_mapped(struct address_space *mapping)
 #define i_size_ordered_init(inode) do { } while (0)
 #endif
 
+/* 文件系统的inode节点 */
 struct inode {
 	struct hlist_node	i_hash;
 	struct list_head	i_list;
 	struct list_head	i_sb_list;
 	struct list_head	i_dentry;
-	unsigned long		i_ino;
+	unsigned long		i_ino;   /* i节点号 */
 	atomic_t		i_count;
 	umode_t			i_mode;
 	unsigned int		i_nlink;
@@ -751,6 +752,7 @@ extern spinlock_t sb_lock;
 
 #define sb_entry(list)	list_entry((list), struct super_block, s_list)
 #define S_BIAS (1<<30)
+/* 文件系统的超级块 */
 struct super_block {
 	struct list_head	s_list;		/* Keep this first */
 	dev_t			s_dev;		/* search index; _not_ kdev_t */
@@ -766,6 +768,7 @@ struct super_block {
 	struct export_operations *s_export_op;
 	unsigned long		s_flags;
 	unsigned long		s_magic;
+	/* 超级块的根目录 */
 	struct dentry		*s_root;
 	struct rw_semaphore	s_umount;
 	struct semaphore	s_lock;
@@ -1158,6 +1161,7 @@ find_exported_dentry(struct super_block *sb, void *obj, void *parent,
 		     void *context);
 
 struct file_system_type {
+	/* 文件系统名称 */
 	const char *name;
 	int fs_flags;
 	struct super_block *(*get_sb) (struct file_system_type *, int,

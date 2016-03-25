@@ -61,6 +61,7 @@ static inline void file_free(struct file *f)
  * Returns NULL, if there are no more free file structures or
  * we run out of memory.
  */
+/* 获取一个空的文件指针 */
 struct file *get_empty_filp(void)
 {
 static int old_max;
@@ -146,6 +147,7 @@ void fastcall __fput(struct file *file)
 	mntput(mnt);
 }
 
+/* 根据文件描述符来获取对应的file指针 */
 struct file fastcall *fget(unsigned int fd)
 {
 	struct file *file;

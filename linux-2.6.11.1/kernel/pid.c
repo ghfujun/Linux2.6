@@ -32,7 +32,9 @@ static struct hlist_head *pid_hash[PIDTYPE_MAX];
 static int pidhash_shift;
 
 int pid_max = PID_MAX_DEFAULT;
+/* 当前最后一个进程的pid，如果遇到pid_max则会重新循环 */
 int last_pid;
+
 
 /* 当在分配进程id时，如果超过了最大id号，则重新返回到这个地方 */
 #define RESERVED_PIDS		300
@@ -40,6 +42,7 @@ int last_pid;
 int pid_max_min = RESERVED_PIDS + 1;
 int pid_max_max = PID_MAX_LIMIT;
 
+/* 取整页内存 */
 #define PIDMAP_ENTRIES		((PID_MAX_LIMIT + 8*PAGE_SIZE - 1)/PAGE_SIZE/8)
 /* 获取每页内存中二进制位的数量 */
 #define BITS_PER_PAGE		(PAGE_SIZE*8)
@@ -86,7 +89,9 @@ int alloc_pidmap(void)
 	map = &pidmap_array[pid/BITS_PER_PAGE];
 	max_scan = (pid_max + BITS_PER_PAGE - 1)/BITS_PER_PAGE - !offset;
 	for (i = 0; i <= max_scan; ++i) {
+		/* 此处的unlikely并没有起特别特殊的作用，仅仅是一个宏 */
 		if (unlikely(!map->page)) {
+			/* 获取一页内存 */
 			unsigned long page = get_zeroed_page(GFP_KERNEL);
 			/*
 			 * Free the page if someone raced with us
@@ -278,6 +283,7 @@ void __init pidhash_init(void)
 	}
 }
 
+/* 初始化pid的map数组 */
 void __init pidmap_init(void)
 {
 	int i;

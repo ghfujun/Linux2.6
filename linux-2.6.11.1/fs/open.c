@@ -835,6 +835,8 @@ EXPORT_SYMBOL(dentry_open);
 /*
  * Find an empty file descriptor entry, and mark it busy.
  */
+/* 分配一个空的文件描述符
+ */
 int get_unused_fd(void)
 {
 	struct files_struct * files = current->files;

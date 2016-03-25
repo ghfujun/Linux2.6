@@ -473,6 +473,7 @@ void eventpoll_release_file(struct file *file)
  * file descriptors inside the epoll interface. It is the kernel part of
  * the userspace epoll_create(2).
  */
+/* epoll_create系统调用 */
 asmlinkage long sys_epoll_create(int size)
 {
 	int error, fd;
@@ -575,6 +576,7 @@ sys_epoll_ctl(int epfd, int op, int fd, struct epoll_event __user *event)
 	epi = ep_find(ep, tfile, fd);
 
 	error = -EINVAL;
+	/* 根据不同操作符来进行相应的操作 */
 	switch (op) {
 	case EPOLL_CTL_ADD:
 		if (!epi) {
@@ -623,6 +625,8 @@ eexit_1:
 /*
  * Implement the event wait interface for the eventpoll file. It is the kernel
  * part of the user space epoll_wait(2).
+ */
+/* 等待被监控的文件描述符的相应时间，同时获取事件相应的数据
  */
 asmlinkage long sys_epoll_wait(int epfd, struct epoll_event __user *events,
 			       int maxevents, int timeout)
@@ -678,6 +682,8 @@ eexit_1:
 /*
  * Creates the file descriptor to be used by the epoll interface.
  */
+/* 该函数的参数都是输出型
+ */
 static int ep_getfd(int *efd, struct inode **einode, struct file **efile)
 {
 	struct qstr this;
@@ -731,6 +737,7 @@ static int ep_getfd(int *efd, struct inode **einode, struct file **efile)
 	file->private_data = NULL;
 
 	/* Install the new setup file into the allocated fd. */
+	/* 设置fd和file之间的映射关系 */
 	fd_install(fd, file);
 
 	*efd = fd;
@@ -1541,7 +1548,8 @@ static int eventpollfs_delete_dentry(struct dentry *dentry)
 	return 1;
 }
 
-
+/* 从epoll虚拟文件系统中获取一个inode节点，并设置inode节点的相应信息和i_op
+ */
 static struct inode *ep_eventpoll_inode(void)
 {
 	int error = -ENOMEM;
@@ -1550,6 +1558,7 @@ static struct inode *ep_eventpoll_inode(void)
 	if (!inode)
 		goto eexit_1;
 
+	/* 设置节点相应的fop */
 	inode->i_fop = &eventpoll_fops;
 
 	/*
@@ -1602,6 +1611,7 @@ static int __init eventpoll_init(void)
 	 * Register the virtual file system that will be the source of inodes
 	 * for the eventpoll files
 	 */
+	/* 注册epoll文件系统 */
 	error = register_filesystem(&eventpoll_fs_type);
 	if (error)
 		goto epanic;
