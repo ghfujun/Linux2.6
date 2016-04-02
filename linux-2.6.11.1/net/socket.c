@@ -120,6 +120,7 @@ static ssize_t sock_sendpage(struct file *file, struct page *page,
  *	in the operation structures but are done directly via the socketcall() multiplexor.
  */
 
+/* socket文件的fop */
 static struct file_operations socket_file_ops = {
 	.owner =	THIS_MODULE,
 	.llseek =	no_llseek,
@@ -1068,6 +1069,7 @@ int sock_wake_async(struct socket *sock, int how, int band)
 	return 0;
 }
 
+/* 创建套接字 */
 static int __sock_create(int family, int type, int protocol, struct socket **res, int kern)
 {
 	int err;

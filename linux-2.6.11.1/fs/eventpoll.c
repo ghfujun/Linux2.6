@@ -151,7 +151,7 @@
 /* Tells if the epoll_ctl(2) operation needs an event copy from userspace */
 #define EP_OP_HASH_EVENT(op) ((op) != EPOLL_CTL_DEL)
 
-
+/* 仅仅包含文件指针和文件描述符 */
 struct epoll_filefd {
 	struct file *file;
 	int fd;
@@ -203,9 +203,13 @@ struct eventpoll {
 	wait_queue_head_t poll_wait;
 
 	/* List of ready file descriptors */
+        /* 监控可以操作的文件列表,sys_epoll_wait函数就是从中读取数据
+          * 其实就是struct epitem的链表，由struct epitem的rdllink成员进行连接 
+          */
 	struct list_head rdllist;
 
 	/* RB-Tree root used to store monitored fd structs */
+        /* 事件池对应的红黑树的根节点 */
 	struct rb_root rbr;
 };
 
@@ -236,10 +240,10 @@ struct epitem {
 	struct rb_node rbn;
 
 	/* List header used to link this structure to the eventpoll ready list */
-	struct list_head rdllink;
+	struct list_head rdllink;         /* 事件的就绪队列 */
 
 	/* The file descriptor information this item refers to */
-	struct epoll_filefd ffd;
+	struct epoll_filefd ffd;               /* 监听项对应的文件描述信息*/
 
 	/* Number of active wait queue attached to poll operations */
 	int nwait;
@@ -248,15 +252,17 @@ struct epitem {
 	struct list_head pwqlist;
 
 	/* The "container" of this item */
-	struct eventpoll *ep;
+	struct eventpoll *ep;              /* 指向包含自己的指针 */
 
 	/* The structure that describe the interested events and the source fd */
-	struct epoll_event event;
+	struct epoll_event event;           /* 监听项目对应的事件 */
 
 	/*
 	 * Used to keep track of the usage count of the structure. This avoids
 	 * that the structure will desappear from underneath our processing.
 	 */
+        /* epitem的引用计数 
+        */
 	atomic_t usecnt;
 
 	/* List header used to link this item to the "struct file" items list */
@@ -524,6 +530,7 @@ eexit_1:
  * file descriptors inside the interest set.  It represents
  * the kernel part of the user space epoll_ctl(2).
  */
+/* 添加文件监控事件 */
 asmlinkage long
 sys_epoll_ctl(int epfd, int op, int fd, struct epoll_event __user *event)
 {
@@ -563,6 +570,7 @@ sys_epoll_ctl(int epfd, int op, int fd, struct epoll_event __user *event)
 	 * adding an epoll file descriptor inside itself.
 	 */
 	error = -EINVAL;
+        /* 判断文件的操作符是不是eventpoll_fops */
 	if (file == tfile || !IS_FILE_EPOLL(file))
 		goto eexit_3;
 
@@ -580,7 +588,8 @@ sys_epoll_ctl(int epfd, int op, int fd, struct epoll_event __user *event)
 	error = -EINVAL;
 	/* 根据不同操作符来进行相应的操作 */
 	switch (op) {
-	case EPOLL_CTL_ADD:
+        case EPOLL_CTL_ADD:
+                /* 如果监控里面没有，则加入 */
 		if (!epi) {
 			epds.events |= POLLERR | POLLHUP;
 
@@ -727,6 +736,7 @@ static int ep_getfd(int *efd, struct inode **einode, struct file **efile)
 		goto eexit_4;
 	dentry->d_op = &eventpollfs_dentry_operations;
 	d_add(dentry, inode);
+        /* 增加挂载引用计数 */
 	file->f_vfsmnt = mntget(eventpoll_mnt);
 	file->f_dentry = dentry;
 	file->f_mapping = inode->i_mapping;
@@ -757,7 +767,7 @@ eexit_1:
 	return error;
 }
 
-
+/* 主要设置file的private_data成员 */
 static int ep_file_init(struct file *file)
 {
 	struct eventpoll *ep;
@@ -773,6 +783,7 @@ static int ep_file_init(struct file *file)
 	INIT_LIST_HEAD(&ep->rdllist);
 	ep->rbr = RB_ROOT;
 
+        /* struct eventpoll作为file指针私有数据 */
 	file->private_data = ep;
 
 	DNPRINTK(3, (KERN_INFO "[%p] eventpoll: ep_file_init() ep=%p\n",
@@ -829,6 +840,9 @@ static void ep_free(struct eventpoll *ep)
  * the returned item, so the caller must call ep_release_epitem()
  * after finished using the "struct epitem".
  */
+/* fd监控文件描述符
+  * file为监控文件指针
+  */
 static struct epitem *ep_find(struct eventpoll *ep, struct file *file, int fd)
 {
 	int kcmp;
@@ -839,6 +853,7 @@ static struct epitem *ep_find(struct eventpoll *ep, struct file *file, int fd)
 
 	EP_SET_FFD(&ffd, file, fd);
 	read_lock_irqsave(&ep->lock, flags);
+        /* 在红黑树中逐层进行查找 */
 	for (rbp = ep->rbr.rb_node; rbp; ) {
 		epi = rb_entry(rbp, struct epitem, rbn);
 		kcmp = EP_CMP_FFD(&ffd, &epi->ffd);
@@ -847,6 +862,7 @@ static struct epitem *ep_find(struct eventpoll *ep, struct file *file, int fd)
 		else if (kcmp < 0)
 			rbp = rbp->rb_left;
 		else {
+                        /* 找到了对应的epitem */
 			ep_use_epitem(epi);
 			epir = epi;
 			break;
@@ -865,6 +881,7 @@ static struct epitem *ep_find(struct eventpoll *ep, struct file *file, int fd)
  * Increment the usage count of the "struct epitem" making it sure
  * that the user will have a valid pointer to reference.
  */
+/* 增加引用计数 */
 static void ep_use_epitem(struct epitem *epi)
 {
 
@@ -908,7 +925,7 @@ static void ep_ptable_queue_proc(struct file *file, wait_queue_head_t *whead,
 	}
 }
 
-
+/* 将epi插入到ep中对应的红黑树当中 */
 static void ep_rbtree_insert(struct eventpoll *ep, struct epitem *epi)
 {
 	int kcmp;
@@ -928,7 +945,7 @@ static void ep_rbtree_insert(struct eventpoll *ep, struct epitem *epi)
 	rb_insert_color(&epi->rbn, &ep->rbr);
 }
 
-
+/* 将事件插入到链表当中 */
 static int ep_insert(struct eventpoll *ep, struct epoll_event *event,
 		     struct file *tfile, int fd)
 {
@@ -938,6 +955,7 @@ static int ep_insert(struct eventpoll *ep, struct epoll_event *event,
 	struct ep_pqueue epq;
 
 	error = -ENOMEM;
+        /* 给epitem分配内存 */
 	if (!(epi = EPI_MEM_ALLOC()))
 		goto eexit_1;
 
@@ -1212,6 +1230,7 @@ eexit_1:
  * machanism. It is called by the stored file descriptors when they
  * have events to report.
  */
+/* epoll的回调函数 */
 static int ep_poll_callback(wait_queue_t *wait, unsigned mode, int sync, void *key)
 {
 	int pwake = 0;
@@ -1237,6 +1256,7 @@ static int ep_poll_callback(wait_queue_t *wait, unsigned mode, int sync, void *k
 	if (EP_IS_LINKED(&epi->rdllink))
 		goto is_linked;
 
+        /* 将事件准备事件添加到ep的rdllist当中 */
 	list_add_tail(&epi->rdllink, &ep->rdllist);
 
 is_linked:
@@ -1298,21 +1318,25 @@ static unsigned int ep_eventpoll_poll(struct file *file, poll_table *wait)
  * during the f_op->poll() call, we try to collect the maximum number of items
  * by reducing the irqlock/irqunlock switching rate.
  */
+/* 返回实际准备好事件的数量 */
 static int ep_collect_ready_items(struct eventpoll *ep, struct list_head *txlist, int maxevents)
 {
 	int nepi;
 	unsigned long flags;
+        /* 获取准备好的事件列表，然后依次读取 */
 	struct list_head *lsthead = &ep->rdllist, *lnk;
 	struct epitem *epi;
 
 	write_lock_irqsave(&ep->lock, flags);
 
 	for (nepi = 0, lnk = lsthead->next; lnk != lsthead && nepi < maxevents;) {
+                /* 取出链表中的struct epitem结构 */
 		epi = list_entry(lnk, struct epitem, rdllink);
 
 		lnk = lnk->next;
 
 		/* If this file is already in the ready list we exit soon */
+                /* 如果txlink链表不为空 */
 		if (!EP_IS_LINKED(&epi->txlink)) {
 			/*
 			 * This is initialized in this way so that the default
@@ -1328,6 +1352,7 @@ static int ep_collect_ready_items(struct eventpoll *ep, struct list_head *txlist
 			/*
 			 * Unlink the item from the ready list.
 			 */
+                        /* 读取该epitem后就从链表中删除 */
 			EP_LIST_DEL(&epi->rdllink);
 		}
 	}
@@ -1343,6 +1368,7 @@ static int ep_collect_ready_items(struct eventpoll *ep, struct list_head *txlist
  * __copy_to_user() might sleep, and also f_op->poll() might reenable the IRQ
  * because of the way poll() is traditionally implemented in Linux.
  */
+/* 将txlist中的数据转换到events当中 */
 static int ep_send_events(struct eventpoll *ep, struct list_head *txlist,
 			  struct epoll_event __user *events)
 {
@@ -1451,6 +1477,7 @@ static int ep_events_transfer(struct eventpoll *ep,
 	int eventcnt = 0;
 	struct list_head txlist;
 
+        /* 初始化txtlist链表 */
 	INIT_LIST_HEAD(&txlist);
 
 	/*
@@ -1460,6 +1487,7 @@ static int ep_events_transfer(struct eventpoll *ep,
 	down_read(&ep->sem);
 
 	/* Collect/extract ready items */
+        /* 将读取的事件存放在txlist链表当中 */
 	if (ep_collect_ready_items(ep, &txlist, maxevents) > 0) {
 		/* Build result set in userspace */
 		eventcnt = ep_send_events(ep, &txlist, events);
@@ -1494,6 +1522,7 @@ retry:
 	write_lock_irqsave(&ep->lock, flags);
 
 	res = 0;
+        /* 如果列表为NULL */
 	if (list_empty(&ep->rdllist)) {
 		/*
 		 * We don't have any available event to return to the caller.

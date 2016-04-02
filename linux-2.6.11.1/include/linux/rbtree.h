@@ -97,6 +97,7 @@ static inline struct page * rb_insert_page_cache(struct inode * inode,
 #include <linux/kernel.h>
 #include <linux/stddef.h>
 
+/* 包含左右子树和父节点，以及节点的颜色值  */
 struct rb_node
 {
 	struct rb_node *rb_parent;
@@ -107,6 +108,7 @@ struct rb_node
 	struct rb_node *rb_left;
 };
 
+/* 红黑树的跟节点 */
 struct rb_root
 {
 	struct rb_node *rb_node;

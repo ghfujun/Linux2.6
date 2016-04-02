@@ -426,8 +426,8 @@ static inline int mapping_writably_mapped(struct address_space *mapping)
 /* 文件系统的inode节点 */
 struct inode {
 	struct hlist_node	i_hash;
-	struct list_head	i_list;
-	struct list_head	i_sb_list;
+	struct list_head	i_list;             /* 在使用当中的inode链表 */
+	struct list_head	i_sb_list;        /* 同一个超级块中的inode链表 */
 	struct list_head	i_dentry;
 	unsigned long		i_ino;   /* i节点号 */
 	atomic_t		i_count;
@@ -574,9 +574,10 @@ struct file_ra_state {
 #define RA_FLAG_MISS 0x01	/* a cache miss occured against this file */
 #define RA_FLAG_INCACHE 0x02	/* file is already in cache */
 
+/* file文件结构 */
 struct file {
 	struct list_head	f_list;
-	struct dentry		*f_dentry;
+	struct dentry		*f_dentry;       /* 文件对应的目录指针 */
 	struct vfsmount         *f_vfsmnt;
 	struct file_operations	*f_op;
 	atomic_t		f_count;
@@ -780,7 +781,7 @@ struct super_block {
 	void                    *s_security;
 	struct xattr_handler	**s_xattr;
 
-	struct list_head	s_inodes;	/* all inodes */
+	struct list_head	s_inodes;	/* all inodes */ /* 超级块对应的所有inode链表 */
 	struct list_head	s_dirty;	/* dirty inodes */
 	struct list_head	s_io;		/* parked for writeback */
 	struct hlist_head	s_anon;		/* anonymous dentries for (nfs) exporting */

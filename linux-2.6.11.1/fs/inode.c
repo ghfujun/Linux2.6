@@ -97,6 +97,8 @@ DECLARE_MUTEX(iprune_sem);
 /*
  * Statistics gathering..
  */
+
+/* 记录系统中整个inode的使用情况 */
 struct inodes_stat_t inodes_stat;
 
 static kmem_cache_t * inode_cachep;
@@ -565,6 +567,7 @@ repeat:
  * */
 struct inode *new_inode(struct super_block *sb)
 {
+        /* 记录系统中ino的使用情况 */
 	static unsigned long last_ino;
 	struct inode * inode;
 
@@ -576,6 +579,7 @@ struct inode *new_inode(struct super_block *sb)
 		inodes_stat.nr_inodes++;
 		list_add(&inode->i_list, &inode_in_use);
 		list_add(&inode->i_sb_list, &sb->s_inodes);
+                /* 设置inode的号 */
 		inode->i_ino = ++last_ino;
 		inode->i_state = 0;
 		spin_unlock(&inode_lock);

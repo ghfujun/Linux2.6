@@ -709,7 +709,8 @@ static int shrink_dcache_memory(int nr, unsigned int gfp_mask)
  * available. On a success the dentry is returned. The name passed in is
  * copied and the copy passed in may be reused after this call.
  */
- 
+
+/* 从父目录中分配一个名称为name的子目录 */
 struct dentry *d_alloc(struct dentry * parent, const struct qstr *name)
 {
 	struct dentry *dentry;

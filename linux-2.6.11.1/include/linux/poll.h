@@ -28,6 +28,7 @@ static inline void poll_wait(struct file * filp, wait_queue_head_t * wait_addres
 		p->qproc(filp, wait_address, p);
 }
 
+/* 设置poll的回调函数 */
 static inline void init_poll_funcptr(poll_table *pt, poll_queue_proc qproc)
 {
 	pt->qproc = qproc;

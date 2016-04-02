@@ -333,6 +333,9 @@ unsigned int tcp_poll(struct file *file, struct socket *sock, poll_table *wait)
 	struct sock *sk = sock->sk;
 	struct tcp_sock *tp = tcp_sk(sk);
 
+        /* 这里开始调用epoll中的回调函数
+          * 注意传递过去的是sk的sk_sleep等待队列 
+          */
 	poll_wait(file, sk->sk_sleep, wait);
 	if (sk->sk_state == TCP_LISTEN)
 		return tcp_listen_poll(sk, wait);

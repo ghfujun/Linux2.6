@@ -197,7 +197,11 @@ struct sock {
 	unsigned char		sk_userlocks;
 	socket_lock_t		sk_lock;
 	int			sk_rcvbuf;
-	wait_queue_head_t	*sk_sleep;
+        /* 等待操作socket的进程队列，当有数据时会唤醒改队列中的所有进程，
+          * 并执行等待的回调函数，如在epoll中，当socket可以读写时，此时会调用 
+          * 注册的回调函数来更改已经准备好的队列  
+          */
+	wait_queue_head_t	*sk_sleep;         
 	struct dst_entry	*sk_dst_cache;
 	rwlock_t		sk_dst_lock;
 	struct xfrm_policy	*sk_policy[2];

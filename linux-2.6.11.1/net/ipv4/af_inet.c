@@ -779,6 +779,7 @@ int inet_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
 	return err;
 }
 
+/* inet协议族操作函数 */
 struct proto_ops inet_stream_ops = {
 	.family =	PF_INET,
 	.owner =	THIS_MODULE,
@@ -1014,6 +1015,7 @@ static int __init init_ipv4_mibs(void)
 static int ipv4_proc_init(void);
 extern void ipfrag_init(void);
 
+/* inet协议族初始化 */
 static int __init inet_init(void)
 {
 	struct sk_buff *dummy_skb;
