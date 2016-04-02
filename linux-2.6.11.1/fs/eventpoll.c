@@ -1582,6 +1582,7 @@ eexit_1:
 }
 
 
+/* 获取eventpoll文件系统的超级块 */
 static struct super_block *
 eventpollfs_get_sb(struct file_system_type *fs_type, int flags,
 		   const char *dev_name, void *data)

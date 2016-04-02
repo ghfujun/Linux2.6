@@ -51,6 +51,7 @@ static inline unsigned long hash(struct vfsmount *mnt, struct dentry *dentry)
 	return tmp & hash_mask;
 }
 
+/* 从mnt_cache中分配一个挂载点 */
 struct vfsmount *alloc_vfsmnt(const char *name)
 {
 	struct vfsmount *mnt = kmem_cache_alloc(mnt_cache, GFP_KERNEL); 
@@ -1364,6 +1365,7 @@ static void __init init_mount_tree(void)
 	struct namespace *namespace;
 	struct task_struct *g, *p;
 
+        /* 挂载rootfs文件系统 */
 	mnt = do_kern_mount("rootfs", 0, "rootfs", NULL);
 	if (IS_ERR(mnt))
 		panic("Can't create rootfs");
@@ -1437,7 +1439,9 @@ void __init mnt_init(unsigned long mempages)
 		i--;
 	} while (i);
 	sysfs_init();
+        /* 初始化rootfs */
 	init_rootfs();
+        /* 构造'/'目录 */
 	init_mount_tree();
 }
 

@@ -743,6 +743,8 @@ struct super_block *get_sb_nodev(struct file_system_type *fs_type,
 	int (*fill_super)(struct super_block *, void *, int))
 {
 	int error;
+
+        /* 根据文件系统类型来获取超级块 */
 	struct super_block *s = sget(fs_type, NULL, set_anon_super, NULL);
 
 	if (IS_ERR(s))

@@ -131,6 +131,7 @@ void __init fork_init(unsigned long mempages)
 	init_task.signal->rlim[RLIMIT_NPROC].rlim_max = max_threads/2;
 }
 
+/* */
 static struct task_struct *dup_task_struct(struct task_struct *orig)
 {
 	struct task_struct *tsk;
@@ -138,10 +139,12 @@ static struct task_struct *dup_task_struct(struct task_struct *orig)
 
 	prepare_to_copy(orig);
 
+        /* 分配一个任务结构体 */
 	tsk = alloc_task_struct();
 	if (!tsk)
 		return NULL;
 
+        /* 分配一个线程结构体 */
 	ti = alloc_thread_info(tsk);
 	if (!ti) {
 		free_task_struct(tsk);
@@ -783,6 +786,7 @@ asmlinkage long sys_set_tid_address(int __user *tidptr)
  * parts of the process environment (as per the clone
  * flags). The actual kick-off is left to the caller.
  */
+/* 拷贝进程 */
 static task_t *copy_process(unsigned long clone_flags,
 				 unsigned long stack_start,
 				 struct pt_regs *regs,

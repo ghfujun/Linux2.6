@@ -206,6 +206,7 @@ struct super_block *ramfs_get_sb(struct file_system_type *fs_type,
 	return get_sb_nodev(fs_type, flags, data, ramfs_fill_super);
 }
 
+/* 获取根文件系统的超级块 */
 static struct super_block *rootfs_get_sb(struct file_system_type *fs_type,
 	int flags, const char *dev_name, void *data)
 {
@@ -236,6 +237,7 @@ static void __exit exit_ramfs_fs(void)
 module_init(init_ramfs_fs)
 module_exit(exit_ramfs_fs)
 
+/* 初始化rootfs文件系统 */
 int __init init_rootfs(void)
 {
 	return register_filesystem(&rootfs_fs_type);

@@ -371,10 +371,12 @@ static void __init smp_init(void)
 static void noinline rest_init(void)
 	__releases(kernel_lock)
 {
+        /* 启动内核线程 */
 	kernel_thread(init, NULL, CLONE_FS | CLONE_SIGHAND);
 	numa_default_policy();
 	unlock_kernel();
 	preempt_enable_no_resched();
+        /* 让0进程空转 */
 	cpu_idle();
 } 
 
@@ -498,6 +500,7 @@ asmlinkage void __init start_kernel(void)
 	buffer_init();
 	unnamed_dev_init();
 	security_init();
+        /* VFS的相关初始化，如rootfs */
 	vfs_caches_init(num_physpages);
 	radix_tree_init();
 	signals_init();
@@ -511,6 +514,7 @@ asmlinkage void __init start_kernel(void)
 	acpi_early_init(); /* before LAPIC and SMP init */
 
 	/* Do the rest non-__init'ed, we're now alive */
+        /*  在该函数中创建内核init线程 */
 	rest_init();
 }
 

@@ -20,6 +20,8 @@
 #define MNT_NODEV	2
 #define MNT_NOEXEC	4
 
+
+/* 文件系统挂载点结构 */
 struct vfsmount
 {
 	struct list_head mnt_hash;

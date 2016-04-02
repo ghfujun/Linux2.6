@@ -859,13 +859,16 @@ EXPORT_SYMBOL(d_instantiate_unique);
  * memory or the inode passed is %NULL.
  */
  
+
+/* 分配文件系统的‘/'目录 */
 struct dentry * d_alloc_root(struct inode * root_inode)
 {
 	struct dentry *res = NULL;
 
 	if (root_inode) {
 		static const struct qstr name = { .name = "/", .len = 1 };
-
+                
+                /* 分配根目录 */
 		res = d_alloc(NULL, &name);
 		if (res) {
 			res->d_sb = root_inode->i_sb;
@@ -1732,6 +1735,7 @@ void __init vfs_caches_init(unsigned long mempages)
 	dcache_init(mempages);
 	inode_init(mempages);
 	files_init(mempages);
+        /* 挂载初始化 */
 	mnt_init(mempages);
 	bdev_cache_init();
 	chrdev_init();

@@ -1172,7 +1172,7 @@ struct file_system_type {
 	void (*kill_sb) (struct super_block *);
 	struct module *owner;
 	struct file_system_type * next;
-	struct list_head fs_supers;
+	struct list_head fs_supers;             /* 超级块链表 */
 };
 
 struct super_block *get_sb_bdev(struct file_system_type *fs_type,
