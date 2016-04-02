@@ -344,6 +344,8 @@ static struct file_operations eventpoll_fops = {
  * This is used to register the virtual file system from where
  * eventpoll inodes are allocated.
  */
+
+/* epoll文件系统类型 */
 static struct file_system_type eventpoll_fs_type = {
 	.name		= "eventpollfs",
 	.get_sb		= eventpollfs_get_sb,

@@ -27,7 +27,7 @@
  *	Once the reference is obtained we can drop the spinlock.
  */
 
-/* 系统重文件系统的全局变量 */
+/* 系统中文件系统的全局变量 */
 static struct file_system_type *file_systems;
 static DEFINE_RWLOCK(file_systems_lock);
 
@@ -42,7 +42,7 @@ void put_filesystem(struct file_system_type *fs)
 	module_put(fs->owner);
 }
 
-/* 返回名称为name的file_system_type */
+/* 返回名称为name的file_system_type，注意函数最后的返回类型 */
 static struct file_system_type **find_filesystem(const char *name)
 {
 	struct file_system_type **p;
@@ -78,10 +78,11 @@ int register_filesystem(struct file_system_type * fs)
 	INIT_LIST_HEAD(&fs->fs_supers);
 	write_lock(&file_systems_lock);
 	p = find_filesystem(fs->name);
+        /* 如果已经被注册，则返回忙状态  */
 	if (*p)
 		res = -EBUSY;
 	else
-		*p = fs;
+		*p = fs;        /* 设置链表关系，也就是存放在链表的最末端 */
 	write_unlock(&file_systems_lock);
 	return res;
 }
@@ -217,6 +218,7 @@ int get_filesystem_list(char * buf)
 	return len;
 }
 
+/* 根据文件系统名称来获取文件系统类型,也就是返回file_system_type结构 */
 struct file_system_type *get_fs_type(const char *name)
 {
 	struct file_system_type *fs;

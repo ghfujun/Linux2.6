@@ -754,19 +754,20 @@ extern spinlock_t sb_lock;
 #define S_BIAS (1<<30)
 /* 文件系统的超级块 */
 struct super_block {
+        /* 超级块链表 */
 	struct list_head	s_list;		/* Keep this first */
 	dev_t			s_dev;		/* search index; _not_ kdev_t */
-	unsigned long		s_blocksize;
+	unsigned long		s_blocksize;   /* 以字节为单位的块大小 */
 	unsigned long		s_old_blocksize;
-	unsigned char		s_blocksize_bits;
+	unsigned char		s_blocksize_bits;  /* 以位为单位的块大小 */
 	unsigned char		s_dirt;
-	unsigned long long	s_maxbytes;	/* Max file size */
-	struct file_system_type	*s_type;
-	struct super_operations	*s_op;
+	unsigned long long	s_maxbytes;	/* Max file size */ /* 文件的最长长度 */
+	struct file_system_type	*s_type;         /* 超级块对应得文件系统类型 */
+	struct super_operations	*s_op;          /* 超级块的操作符 */
 	struct dquot_operations	*dq_op;
  	struct quotactl_ops	*s_qcop;
 	struct export_operations *s_export_op;
-	unsigned long		s_flags;
+	unsigned long		s_flags;             /* 超级块的挂载标记 */
 	unsigned long		s_magic;
 	/* 超级块的根目录 */
 	struct dentry		*s_root;
@@ -1160,10 +1161,12 @@ find_exported_dentry(struct super_block *sb, void *obj, void *parent,
 		     int (*acceptable)(void *context, struct dentry *de),
 		     void *context);
 
+/* 和1.0版本功能上有相似之处 */
 struct file_system_type {
 	/* 文件系统名称 */
 	const char *name;
 	int fs_flags;
+        /* 同样是读取文件系统的超级块 */
 	struct super_block *(*get_sb) (struct file_system_type *, int,
 				       const char *, void *);
 	void (*kill_sb) (struct super_block *);

@@ -14,6 +14,8 @@
  * bitmasks used on that platform, i.e. 32 or 64.  Setting this smaller
  * saves quite a bit of memory.
  */
+
+/* 根据CONFIG_SMP宏来判断系统中到底有多少个处理器，默认情况下就是一个 */
 #ifdef CONFIG_SMP
 #define NR_CPUS		CONFIG_NR_CPUS
 #else

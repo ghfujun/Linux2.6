@@ -793,6 +793,7 @@ struct super_block *get_sb_single(struct file_system_type *fs_type,
 
 EXPORT_SYMBOL(get_sb_single);
 
+/* 内核文件系统挂载函数 */
 struct vfsmount *
 do_kern_mount(const char *fstype, int flags, const char *name, void *data)
 {

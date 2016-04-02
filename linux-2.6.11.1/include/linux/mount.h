@@ -23,13 +23,16 @@
 struct vfsmount
 {
 	struct list_head mnt_hash;
+        /* 指向父文件系统，这个文件系统安装其上 */
 	struct vfsmount *mnt_parent;	/* fs we are mounted on */
 	struct dentry *mnt_mountpoint;	/* dentry of mountpoint */
+        /* 指向这个文件系统的根目录 */
 	struct dentry *mnt_root;	/* root of the mounted tree */
+        /* 指向文件系统的超级块 */
 	struct super_block *mnt_sb;	/* pointer to superblock */
 	struct list_head mnt_mounts;	/* list of children, anchored here */
 	struct list_head mnt_child;	/* and going through their mnt_child */
-	atomic_t mnt_count;
+	atomic_t mnt_count;             /* 引用计数 */
 	int mnt_flags;
 	int mnt_expiry_mark;		/* true if marked for expiry */
 	char *mnt_devname;		/* Name of device e.g. /dev/dsk/hda1 */

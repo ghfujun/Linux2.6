@@ -527,6 +527,7 @@ struct task_struct *child_reaper = &init_task;
 
 extern initcall_t __initcall_start[], __initcall_end[];
 
+/* 调用模块初始化函数，如module_init */
 static void __init do_initcalls(void)
 {
 	initcall_t *call;
@@ -584,6 +585,7 @@ static void __init do_basic_setup(void)
 	/* Networking initialization needs a process context */ 
 	sock_init();
 
+        /* 从这里会调用到module_init中注册的函数 */
 	do_initcalls();
 }
 

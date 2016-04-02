@@ -4949,6 +4949,7 @@ int in_sched_functions(unsigned long addr)
 		&& addr < (unsigned long)__sched_text_end);
 }
 
+/* 调度初始化 */
 void __init sched_init(void)
 {
 	runqueue_t *rq;
