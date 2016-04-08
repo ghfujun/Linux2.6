@@ -333,6 +333,7 @@ static struct super_block *sockfs_get_sb(struct file_system_type *fs_type,
 
 static struct vfsmount *sock_mnt;
 
+/* sockfs文件系统类型的结构 */
 static struct file_system_type sock_fs_type = {
 	.name =		"sockfs",
 	.get_sb =	sockfs_get_sb,
@@ -460,6 +461,7 @@ struct socket *sockfd_lookup(int fd, int *err)
  *	NULL is returned.
  */
 
+/* 分配一个socket结构 */
 static struct socket *sock_alloc(void)
 {
 	struct inode * inode;
@@ -2027,12 +2029,14 @@ int sock_unregister(int family)
 
 extern void sk_init(void);
 
+/* sock模块初始化 */
 void __init sock_init(void)
 {
 	/*
 	 *	Initialize sock SLAB cache.
 	 */
-	 
+	
+        /* 初始化socket的slab缓存 */
 	sk_init();
 
 #ifdef SLAB_SKB

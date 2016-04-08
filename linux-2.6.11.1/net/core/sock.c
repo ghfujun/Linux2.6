@@ -603,6 +603,7 @@ lenout:
   	return 0;
 }
 
+/* socket的缓存 */
 static kmem_cache_t *sk_cachep;
 
 /**
@@ -666,6 +667,7 @@ void sk_free(struct sock *sk)
 	module_put(owner);
 }
 
+/* 初始化socket的slab缓存 */
 void __init sk_init(void)
 {
 	sk_cachep = kmem_cache_create("sock", sizeof(struct sock), 0,

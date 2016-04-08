@@ -80,6 +80,7 @@ struct dcookie_struct;
 
 #define DNAME_INLINE_LEN_MIN 36
 
+/* 目录结构 */
 struct dentry {
 	atomic_t d_count;
 	unsigned int d_flags;		/* protected by d_lock */

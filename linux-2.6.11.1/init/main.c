@@ -482,6 +482,7 @@ asmlinkage void __init start_kernel(void)
 #endif
 	vfs_caches_init_early();
 	mem_init();
+        /* 高速缓存初始化 */
 	kmem_cache_init();
 	numa_policy_init();
 	if (late_time_init)
@@ -587,6 +588,7 @@ static void __init do_basic_setup(void)
 #endif
 
 	/* Networking initialization needs a process context */ 
+        /* 网络初始化 */
 	sock_init();
 
         /* 从这里会调用到module_init中注册的函数 */

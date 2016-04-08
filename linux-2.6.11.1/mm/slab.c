@@ -124,7 +124,7 @@
 #define	BYTES_PER_WORD		sizeof(void *)
 
 #ifndef cache_line_size
-#define cache_line_size()	L1_CACHE_BYTES
+#define cache_line_size()	L1_CACHE_BYTES       /* 获取cpu一级缓存的字节数 */
 #endif
 
 #ifndef ARCH_KMALLOC_MINALIGN
@@ -206,9 +206,12 @@ static unsigned long offslab_limit;
  */
 struct slab {
 	struct list_head	list;
-	unsigned long		colouroff;
+	unsigned long		colouroff;     /* slab中第一个对象的着色 */
+        /* slab中第一个对象(已分配或空闲)的地址 */
 	void			*s_mem;		/* including colour offset */
+        /* 当前正在使用的slab中的对象个数 */
 	unsigned int		inuse;		/* num of objs active in slab */
+        /* slab中下一个空闲对象的下标，如果没有剩下空闲对象则为BUFCTL_END */
 	kmem_bufctl_t		free;
 };
 
@@ -271,9 +274,13 @@ struct arraycache_init {
  * fewer cross-node spinlock operations.
  */
 struct kmem_list3 {
+        /* 包含空闲和非空闲对象的slab描述符双向循环链表 */
 	struct list_head	slabs_partial;	/* partial list first, better asm code */
+        /* 不包含空闲对象的slab描述符双向循环链表 */
 	struct list_head	slabs_full;
+        /* 只包含空闲对象的slab描述符的双向循环链表 */
 	struct list_head	slabs_free;
+        /* 高速缓存中空闲对象的个数 */
 	unsigned long	free_objects;
 	int		free_touched;
 	unsigned long	next_reap;
@@ -298,7 +305,8 @@ struct kmem_list3 {
  *
  * manages a cache.
  */
-	
+/* 高速缓存的结构
+  */
 struct kmem_cache_s {
 /* 1) per-cpu data, touched during every alloc/free */
 	struct array_cache	*array[NR_CPUS];
@@ -307,35 +315,45 @@ struct kmem_cache_s {
 /* 2) touched by every alloc & free from the backend */
 	struct kmem_list3	lists;
 	/* NUMA: kmem_3list_t	*nodelists[MAX_NUMNODES] */
+        /* 高速缓存中对齐后对象的大小 */
 	unsigned int		objsize;
 	unsigned int	 	flags;	/* constant flags */
+        /* 封装在一个单独slab中的对象个数(高速缓存中所有的slab都具有相同大小 */
 	unsigned int		num;	/* # of objs per slab */
+        /* 整个slab高速缓存中空闲对象的上限 */
 	unsigned int		free_limit; /* upper limit of objects in the lists */
+        /* 高速缓存的自旋锁 */
 	spinlock_t		spinlock;
 
 /* 3) cache_grow/shrink */
 	/* order of pgs per slab (2^n) */
+        /* 一个单独的slab中包含的连续页框数目的对数 */
 	unsigned int		gfporder;
 
 	/* force GFP flags, e.g. GFP_DMA */
+        /* 分配页框时传递给伙伴系统函数的一组标记 */
 	unsigned int		gfpflags;
 
+        /* slab中使用颜色的个数 */
 	size_t			colour;		/* cache colouring range */
 	unsigned int		colour_off;	/* colour offset */
 	unsigned int		colour_next;	/* cache colouring */
 	kmem_cache_t		*slabp_cache;
+        /* 单个slab的大小 */
 	unsigned int		slab_size;
 	unsigned int		dflags;		/* dynamic flags */
 
 	/* constructor func */
+        /* 指向与高速缓存相关的构造方法的指针 */
 	void (*ctor)(void *, kmem_cache_t *, unsigned long);
 
 	/* de-constructor func */
+        /* 指向与高速缓存相关的析构方法的指针 */
 	void (*dtor)(void *, kmem_cache_t *, unsigned long);
 
 /* 4) cache creation/removal */
-	const char		*name;
-	struct list_head	next;
+	const char		*name;            /* 高速缓存的名称 */
+	struct list_head	next;              /* 高速缓存双向链表 */
 
 /* 5) statistics */
 #if STATS
@@ -354,7 +372,7 @@ struct kmem_cache_s {
 #endif
 #if DEBUG
 	int			dbghead;
-	int			reallen;
+	int			reallen;       /* 对象的实际大小 */
 #endif
 };
 
@@ -532,6 +550,7 @@ static struct arraycache_init initarray_generic =
 	{ { 0, BOOT_CPUCACHE_ENTRIES, 1, 0} };
 
 /* internal cache of cache description objs */
+/* 存放高速缓冲头的高速缓存也称之为普通高速缓存 */
 static kmem_cache_t cache_cache = {
 	.lists		= LIST3_INIT(cache_cache.lists),
 	.batchcount	= 1,
@@ -546,7 +565,10 @@ static kmem_cache_t cache_cache = {
 };
 
 /* Guard access to the cache-chain. */
+/* 保护对高速缓冲描述符链表的操作 */
 static struct semaphore	cache_chain_sem;
+
+/* 高速缓存链，系统中创建的所有高速缓冲描述符都插入到该链表中 */
 static struct list_head cache_chain;
 
 /*
@@ -741,6 +763,7 @@ static struct notifier_block cpucache_notifier = { &cpuup_callback, NULL, 0 };
 /* Initialisation.
  * Called after the gfp() functions have been enabled, and before smp_init().
  */
+/* 系统初始化阶段调用该函数来初始化高速缓存 */
 void __init kmem_cache_init(void)
 {
 	size_t left_over;
@@ -774,6 +797,7 @@ void __init kmem_cache_init(void)
 	/* 1) create the cache_cache */
 	init_MUTEX(&cache_chain_sem);
 	INIT_LIST_HEAD(&cache_chain);
+        /* 首先把专门存放高速缓冲头的高速缓冲描述符添加到缓冲链表中 */
 	list_add(&cache_cache.next, &cache_chain);
 	cache_cache.colour_off = cache_line_size();
 	cache_cache.array[smp_processor_id()] = &initarray_cache.cache;
@@ -1183,6 +1207,7 @@ static void slab_destroy (kmem_cache_t *cachep, struct slab *slabp)
  * cacheline.  This can be beneficial if you're counting cycles as closely
  * as davem.
  */
+/* 专用高速缓存的创建 */
 kmem_cache_t *
 kmem_cache_create (const char *name, size_t size, size_t align,
 	unsigned long flags, void (*ctor)(void*, kmem_cache_t *, unsigned long),
@@ -1255,6 +1280,7 @@ kmem_cache_create (const char *name, size_t size, size_t align,
 		 * objects into one cacheline.
 		 */
 		ralign = cache_line_size();
+                /* 获取最佳的内存对齐大小 */
 		while (size <= ralign/2)
 			ralign /= 2;
 	} else {
@@ -1403,9 +1429,11 @@ next:
 	cachep->gfpflags = 0;
 	if (flags & SLAB_CACHE_DMA)
 		cachep->gfpflags |= GFP_DMA;
+        /* 初始化自旋锁 */
 	spin_lock_init(&cachep->spinlock);
 	cachep->objsize = size;
 	/* NUMA */
+        /* 设置三个链表的关系 */
 	INIT_LIST_HEAD(&cachep->lists.slabs_full);
 	INIT_LIST_HEAD(&cachep->lists.slabs_partial);
 	INIT_LIST_HEAD(&cachep->lists.slabs_free);

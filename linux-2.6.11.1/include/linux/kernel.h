@@ -28,6 +28,8 @@ extern const char linux_banner[];
 #define STACK_MAGIC	0xdeadbeef
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+
+/* 以多少字节对齐，对齐的只能是2的n次 */
 #define ALIGN(x,a) (((x)+(a)-1)&~((a)-1))
 
 #define	KERN_EMERG	"<0>"	/* system is unusable			*/
