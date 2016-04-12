@@ -220,6 +220,7 @@ typedef unsigned long page_flags_t;
  * moment. Note that we have no way to track which tasks are using
  * a page.
  */
+/* 内存页描述符 */
 struct page {
 	page_flags_t flags;		/* Atomic flags, some possibly
 					 * updated asynchronously */

@@ -92,9 +92,11 @@ static inline struct page *alloc_pages_node(int nid, unsigned int gfp_mask,
 		NODE_DATA(nid)->node_zonelists + (gfp_mask & GFP_ZONEMASK));
 }
 
+/* 是否启用非一致内存访问 */
 #ifdef CONFIG_NUMA
 extern struct page *alloc_pages_current(unsigned gfp_mask, unsigned order);
 
+/* 分配2的order次方个内存页 */
 static inline struct page *
 alloc_pages(unsigned int gfp_mask, unsigned int order)
 {

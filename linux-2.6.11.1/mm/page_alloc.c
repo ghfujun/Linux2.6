@@ -40,7 +40,8 @@
 /* MCD - HACK: Find somewhere to initialize this EARLY, or make this initializer cleaner */
 nodemask_t node_online_map = { { [0] = 1UL } };
 nodemask_t node_possible_map = NODE_MASK_ALL;
-struct pglist_data *pgdat_list;
+/* 内存节点链表，指向链首 */
+struct pglist_data *pgdat_list;          
 unsigned long totalram_pages;
 unsigned long totalhigh_pages;
 long nr_swap_pages;
@@ -65,6 +66,8 @@ struct zone *zone_table[1 << (ZONES_SHIFT + NODES_SHIFT)];
 EXPORT_SYMBOL(zone_table);
 
 static char *zone_names[MAX_NR_ZONES] = { "DMA", "Normal", "HighMem" };
+
+/* 内核保留页框池的大小，以字节为单位 */
 int min_free_kbytes = 1024;
 
 unsigned long __initdata nr_kernel_pages;
@@ -428,6 +431,9 @@ static void prep_new_page(struct page *page, int order)
  * Do the hard work of removing an element from the buddy allocator.
  * Call me with the zone->lock already held.
  */
+/* 用来在管理区中找到一个空闲块，
+  * 如果页框分配成功，就返回第一个被分配页框的页描述符
+  */
 static struct page *__rmqueue(struct zone *zone, unsigned int order)
 {
 	struct free_area * area;
@@ -439,6 +445,7 @@ static struct page *__rmqueue(struct zone *zone, unsigned int order)
 		if (list_empty(&area->free_list))
 			continue;
 
+                /* 获取也描述符，同时将page从lru链表中删除 */
 		page = list_entry(area->free_list.next, struct page, lru);
 		list_del(&page->lru);
 		rmv_page_order(page);

@@ -22,7 +22,7 @@
 
 struct free_area {
 	struct list_head	free_list;
-	unsigned long		nr_free;
+	unsigned long		nr_free;        /* 链中空闲数 */
 };
 
 struct pglist_data;
@@ -109,7 +109,10 @@ struct per_cpu_pageset {
 
 struct zone {
 	/* Fields commonly accessed by the page allocator */
-	unsigned long		free_pages;
+	unsigned long		free_pages;               /* 管理区中空闲页的数量 */
+        /* pages_min为管理区中保留页的数目
+          *
+          */
 	unsigned long		pages_min, pages_low, pages_high;
 	/*
 	 * We don't know if the memory that we're going to allocate will be freeable
@@ -119,6 +122,7 @@ struct zone {
 	 * on the higher zones). This array is recalculated at runtime if the
 	 * sysctl_lowmem_reserve_ratio sysctl changes.
 	 */
+        /* 指明在内存不足的情况下，每个管理区必须保留的页框数目 */
 	unsigned long		lowmem_reserve[MAX_NR_ZONES];
 
 	struct per_cpu_pageset	pageset[NR_CPUS];
@@ -127,6 +131,7 @@ struct zone {
 	 * free areas of different sizes
 	 */
 	spinlock_t		lock;
+        /* 标识出管理区中的空闲页框块 */
 	struct free_area	free_area[MAX_ORDER];
 
 
@@ -134,12 +139,13 @@ struct zone {
 
 	/* Fields commonly accessed by the page reclaim scanner */
 	spinlock_t		lru_lock;	
-	struct list_head	active_list;
-	struct list_head	inactive_list;
-	unsigned long		nr_scan_active;
+	struct list_head	active_list;             /* 管理区中活动页的的链表 */
+	struct list_head	inactive_list;          /* 管理区中非活动页的链表 */
+	unsigned long		nr_scan_active;     /* 回收页框时需要扫描的活动页数 */
 	unsigned long		nr_scan_inactive;
-	unsigned long		nr_active;
+	unsigned long		nr_active;             /* 管理区中活动链表上的页数目 */
 	unsigned long		nr_inactive;
+        /* 管理区内回收页框时使用的计数器 */
 	unsigned long		pages_scanned;	   /* since last reclaim */
 	int			all_unreclaimable; /* All pages pinned */
 
@@ -190,24 +196,28 @@ struct zone {
 	 * primary users of these fields, and in mm/page_alloc.c
 	 * free_area_init_core() performs the initialization of them.
 	 */
-	wait_queue_head_t	* wait_table;
-	unsigned long		wait_table_size;
+        /* 进程等待队列的散列表，这些进程在等待管理区中的某页 */
+	wait_queue_head_t	* wait_table;        
+	unsigned long		wait_table_size;    /* 等待队列散列表的大小 */
 	unsigned long		wait_table_bits;
 
 	/*
 	 * Discontig memory support fields.
 	 */
-	struct pglist_data	*zone_pgdat;
-	struct page		*zone_mem_map;
+	struct pglist_data	*zone_pgdat;        /* 相应的内存节点 */
+	struct page		*zone_mem_map;   /* 指向管理区中第一个也描述符的指针 */
 	/* zone_start_pfn == zone_start_paddr >> PAGE_SHIFT */
-	unsigned long		zone_start_pfn;
+	unsigned long		zone_start_pfn;    /* 管理区中第一个页框的下标 */
 
+        /* 以页为单位的管理区的总大小，包括洞 */
 	unsigned long		spanned_pages;	/* total size, including holes */
+        /* 以页为单位的管理区的总大小，不包括洞 */
 	unsigned long		present_pages;	/* amount of memory (excluding holes) */
 
 	/*
 	 * rarely used fields:
 	 */
+        /* 指向管理区的名称 */
 	char			*name;
 } ____cacheline_maxaligned_in_smp;
 
@@ -230,6 +240,8 @@ struct zone {
  * so despite the zonelist table being relatively big, the cache
  * footprint of this construct is very small.
  */
+/*  管理区链表 
+  */ 
 struct zonelist {
 	struct zone *zones[MAX_NUMNODES * MAX_NR_ZONES + 1]; // NULL delimited
 };
@@ -247,18 +259,21 @@ struct zonelist {
  * per-zone basis.
  */
 struct bootmem_data;
+/* 内存节点结构 */
 typedef struct pglist_data {
-	struct zone node_zones[MAX_NR_ZONES];
+	struct zone node_zones[MAX_NR_ZONES];         /* 节点中管理区描述符的数组 */
 	struct zonelist node_zonelists[GFP_ZONETYPES];
-	int nr_zones;
-	struct page *node_mem_map;
-	struct bootmem_data *bdata;
-	unsigned long node_start_pfn;
+	int nr_zones;                        /* 节点中管理区的个数 */
+	struct page *node_mem_map;           /* 节点中页描述符的数组 */
+	struct bootmem_data *bdata;            /* 用在内核初始化阶段 */
+	unsigned long node_start_pfn;          /* 节点中第一个页框的下标 */
+        /* 内存节点的大小，不包括洞 (以页框为单位) */
 	unsigned long node_present_pages; /* total number of physical pages */
+        /* 内存节点的大小，包括洞 */
 	unsigned long node_spanned_pages; /* total size of physical page
 					     range, including holes */
-	int node_id;
-	struct pglist_data *pgdat_next;
+	int node_id;              /* 节点标识符 */
+	struct pglist_data *pgdat_next;          /* 内存节点的下一项 */
 	wait_queue_head_t kswapd_wait;
 	struct task_struct *kswapd;
 	int kswapd_max_order;

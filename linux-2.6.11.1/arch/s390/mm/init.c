@@ -198,6 +198,7 @@ void __init paging_init(void)
 	}
 
 	/* Initialize mem_map[].  */
+        /* 使用管理区来初始化mem_map数组 */
 	free_area_init(zones_size);
 
 
