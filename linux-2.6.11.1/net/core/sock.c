@@ -618,12 +618,14 @@ static kmem_cache_t *sk_cachep;
  *	private slabcaches have different sizes of the generic struct sock.
  *	1 has been kept as a way to say sizeof(struct sock).
  */
+/* 分配一个struct sock结构 */
 struct sock *sk_alloc(int family, int priority, int zero_it, kmem_cache_t *slab)
 {
 	struct sock *sk = NULL;
 
 	if (!slab)
 		slab = sk_cachep;
+        /* 从slab中分配一个struct sock */
 	sk = kmem_cache_alloc(slab, priority);
 	if (sk) {
 		if (zero_it) {

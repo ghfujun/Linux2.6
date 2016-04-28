@@ -48,6 +48,8 @@
 #include <net/ipip.h>
 #include <linux/igmp.h>
 
+
+/* 网络协议数组 */
 struct net_protocol *inet_protos[MAX_INET_PROTOS];
 static DEFINE_SPINLOCK(inet_proto_lock);
 

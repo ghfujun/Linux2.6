@@ -107,7 +107,7 @@ struct socket {
 	unsigned long		flags;
 	struct proto_ops	*ops;
 	struct fasync_struct	*fasync_list;
-	struct file		*file;
+	struct file		*file;                 /* 指向对应的文件描述符 */
 	struct sock		*sk;
 	wait_queue_head_t	wait;
 	short			type;
@@ -121,6 +121,7 @@ struct sockaddr;
 struct msghdr;
 struct module;
 
+/* 协议族操作函数集合 */
 struct proto_ops {
 	int		family;
 	struct module	*owner;

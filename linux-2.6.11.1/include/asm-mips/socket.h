@@ -93,6 +93,7 @@ enum sock_type {
 	SOCK_PACKET	= 10,
 };
 
+/* 协议类型的最大个数 */
 #define SOCK_MAX (SOCK_PACKET + 1)
 
 #define ARCH_HAS_SOCKET_TYPES 1

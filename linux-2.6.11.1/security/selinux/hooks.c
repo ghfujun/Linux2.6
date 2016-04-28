@@ -2935,6 +2935,7 @@ static int selinux_socket_create(int family, int type,
 	int err = 0;
 	struct task_security_struct *tsec;
 
+        /* 如果kern>0，则直接返回 */
 	if (kern)
 		goto out;
 

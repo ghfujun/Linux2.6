@@ -236,6 +236,7 @@ struct module_sect_attrs
 
 struct module_param_attrs;
 
+/* 内核模块结构 */
 struct module
 {
 	enum module_state state;

@@ -429,6 +429,7 @@ out:
  *	On a success the socket object pointer is returned.
  */
 
+/* 找出相应文件描述符对应的struct socket结构 */
 struct socket *sockfd_lookup(int fd, int *err)
 {
 	struct file *file;
@@ -1286,6 +1287,7 @@ out:
  *	the protocol layer (having also checked the address is ok).
  */
 
+/* 套接字绑定函数 */
 asmlinkage long sys_bind(int fd, struct sockaddr __user *umyaddr, int addrlen)
 {
 	struct socket *sock;
@@ -1993,6 +1995,7 @@ asmlinkage long sys_socketcall(int call, unsigned long __user *args)
  *	SOCKET module.
  */
 
+/* 注册网络协议族如UNIX或INET*/
 int sock_register(struct net_proto_family *ops)
 {
 	int err;

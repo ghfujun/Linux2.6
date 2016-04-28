@@ -119,7 +119,7 @@ struct inet_sock {
 	__u32			daddr;		/* Foreign IPv4 addr */
 	__u32			rcv_saddr;	/* Bound local IPv4 addr */
 	__u16			dport;		/* Destination port */
-	__u16			num;		/* Local port */
+	__u16			num;		/* Local port */            /* 本地端口号 */
 	__u32			saddr;		/* Sending source */
 	int			uc_ttl;		/* Unicast TTL */
 	int			tos;		/* TOS */

@@ -60,6 +60,7 @@ extern void free_fdset(fd_set *, int);
 
 extern int expand_files(struct files_struct *, int nr);
 
+/* 以fd作为索引直接从fd数组中获取 */
 static inline struct file * fcheck_files(struct files_struct *files, unsigned int fd)
 {
 	struct file * file = NULL;

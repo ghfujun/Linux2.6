@@ -445,7 +445,7 @@ struct inode {
 	unsigned long		i_version;
 	unsigned long		i_blocks;
 	unsigned short          i_bytes;
-	unsigned char		i_sock;
+	unsigned char		i_sock;				/* 是否是socket的inode */
 	spinlock_t		i_lock;	/* i_blocks, i_bytes, maybe i_size */
 	struct semaphore	i_sem;
 	struct rw_semaphore	i_alloc_sem;
@@ -580,7 +580,7 @@ struct file {
 	struct dentry		*f_dentry;       /* 文件对应的目录指针 */
 	struct vfsmount         *f_vfsmnt;
 	struct file_operations	*f_op;
-	atomic_t		f_count;
+	atomic_t		f_count;	  /* 文件的引用计数 */
 	unsigned int 		f_flags;
 	mode_t			f_mode;
 	int			f_error;
@@ -607,6 +607,7 @@ extern spinlock_t files_lock;
 #define file_list_lock() spin_lock(&files_lock);
 #define file_list_unlock() spin_unlock(&files_lock);
 
+/* 增加文件引用计数 */
 #define get_file(x)	atomic_inc(&(x)->f_count)
 #define file_count(x)	atomic_read(&(x)->f_count)
 

@@ -238,6 +238,7 @@ static int inet_create(struct socket *sock, int protocol)
 	char answer_no_check;
 	int err;
 
+	/* 设置socket的状态 */
 	sock->state = SS_UNCONNECTED;
 
 	/* Look for the requested type/protocol pair. */
@@ -779,7 +780,7 @@ int inet_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
 	return err;
 }
 
-/* inet协议族操作函数 */
+/* inet协议族的数据流操作函数 */
 struct proto_ops inet_stream_ops = {
 	.family =	PF_INET,
 	.owner =	THIS_MODULE,
@@ -801,6 +802,7 @@ struct proto_ops inet_stream_ops = {
 	.sendpage =	tcp_sendpage
 };
 
+/* inet协议族的数据报操作函数*/
 struct proto_ops inet_dgram_ops = {
 	.family =	PF_INET,
 	.owner =	THIS_MODULE,
@@ -826,6 +828,7 @@ struct proto_ops inet_dgram_ops = {
  * For SOCK_RAW sockets; should be the same as inet_dgram_ops but without
  * udp_poll
  */
+/* inet协议族的原始套接字操作函数 */
 static struct proto_ops inet_sockraw_ops = {
 	.family =	PF_INET,
 	.owner =	THIS_MODULE,
@@ -910,7 +913,9 @@ void inet_register_protosw(struct inet_protosw *p)
 
 	/* If we are trying to override a permanent protocol, bail. */
 	answer = NULL;
+        /* 让last_perm指向当前位置指针 */
 	last_perm = &inetsw[p->type];
+        /* 从当前循环查找处理 */
 	list_for_each(lh, &inetsw[p->type]) {
 		answer = list_entry(lh, struct inet_protosw, list);
 
@@ -932,6 +937,7 @@ void inet_register_protosw(struct inet_protosw *p)
 	 * non-permanent entry.  This means that when we remove this entry, the 
 	 * system automatically returns to the old behavior.
 	 */
+        /* 将p结构添加到链表当中 */
 	list_add_rcu(&p->list, last_perm);
 out:
 	spin_unlock_bh(&inetsw_lock);
@@ -1048,6 +1054,7 @@ static int __init inet_init(void)
 	 *	Tell SOCKET that we are alive... 
 	 */
 
+	/* 注册inet协议族操作函数 */
   	(void)sock_register(&inet_family_ops);
 
 	/*
@@ -1069,6 +1076,7 @@ static int __init inet_init(void)
 	for (r = &inetsw[0]; r < &inetsw[SOCK_MAX]; ++r)
 		INIT_LIST_HEAD(r);
 
+        /* 依次注册inet协议族的类型协议 */
 	for (q = inetsw_array; q < &inetsw_array[INETSW_ARRAY_LEN]; ++q)
 		inet_register_protosw(q);
 

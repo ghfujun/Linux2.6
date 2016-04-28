@@ -178,6 +178,8 @@ struct sock_common {
   *	@sk_backlog_rcv - callback to process the backlog
   *	@sk_destruct - called at sock freeing time, i.e. when all refcnt == 0
  */
+
+/* sock结构 */
 struct sock {
 	/*
 	 * Now struct tcp_tw_bucket also uses sock_common, so please just

@@ -627,6 +627,9 @@ struct task_struct {
 /* filesystem information */
 	struct fs_struct *fs;
 /* open file information */
+        /* 进程打开的文件结构，在1.0版本当中，里面仅仅是一个数组，
+          * 通过fd索引来直接获取，而这里通过files_struct进行了一定的包装
+          */
 	struct files_struct *files;
 /* namespace */
 	struct namespace *namespace;
