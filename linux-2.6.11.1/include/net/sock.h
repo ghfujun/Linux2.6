@@ -645,6 +645,10 @@ static inline struct kiocb *siocb_to_kiocb(struct sock_iocb *si)
 	return si->kiocb;
 }
 
+/* 在针对socket的时候，struct socket和struct inode都必须是同时存在的
+  * 为了减少结构之中的指针指向，所以两个结构体在内存中连续分配， 
+  * 然后通过内存偏移来处理  
+  */
 struct socket_alloc {
 	struct socket socket;
 	struct inode vfs_inode;

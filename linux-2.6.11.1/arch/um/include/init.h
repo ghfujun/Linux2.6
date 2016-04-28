@@ -37,6 +37,8 @@
  */
 
 #ifndef _LINUX_INIT_H
+
+/* 函数指针类型 */
 typedef int (*initcall_t)(void);
 typedef void (*exitcall_t)(void);
 

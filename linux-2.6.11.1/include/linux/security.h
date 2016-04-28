@@ -1024,6 +1024,12 @@ struct swap_info_struct;
  * 
  * This is the main security structure.
  */
+
+/* 内核安全结构体
+  * linux内核对于程序的运行、文件系统的超级块和节点以及文件操作、
+  * 任务操作、网络连接、socket、System V进程间通信等提供了对应安全操作函数
+  * 该结构体全是回调函数
+  */
 struct security_operations {
 	int (*ptrace) (struct task_struct * parent, struct task_struct * child);
 	int (*capget) (struct task_struct * target,
@@ -2556,6 +2562,7 @@ static inline int security_unix_may_send(struct socket * sock,
 	return security_ops->unix_may_send(sock, other);
 }
 
+/* 通过LSM安全模块来创建套接字 */
 static inline int security_socket_create (int family, int type,
 					  int protocol, int kern)
 {

@@ -547,6 +547,7 @@ static void __init do_initcalls(void)
 			printk("\n");
 		}
 
+                /* 开始真正的调用模块初始化函数 */
 		(*call)();
 
 		msg = NULL;

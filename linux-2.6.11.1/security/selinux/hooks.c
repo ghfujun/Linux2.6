@@ -2928,6 +2928,7 @@ out:
 	return err;
 }
 
+/* 通过LSM模块来创建一个套接字 */
 static int selinux_socket_create(int family, int type,
 				 int protocol, int kern)
 {
@@ -4172,6 +4173,7 @@ static int selinux_setprocattr(struct task_struct *p,
 	return size;
 }
 
+/* selinux安全操作模块 */
 struct security_operations selinux_ops = {
 	.ptrace =			selinux_ptrace,
 	.capget =			selinux_capget,
@@ -4321,6 +4323,7 @@ struct security_operations selinux_ops = {
 #endif
 };
 
+/* selinux模块的初始化 */
 __init int selinux_init(void)
 {
 	struct task_security_struct *tsec;

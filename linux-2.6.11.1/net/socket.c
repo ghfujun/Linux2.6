@@ -274,9 +274,11 @@ int move_addr_to_user(void *kaddr, int klen, void __user *uaddr, int __user *ule
 
 static kmem_cache_t * sock_inode_cachep;
 
+/* 网络文件系统的分配inode的函数 */
 static struct inode *sock_alloc_inode(struct super_block *sb)
 {
 	struct socket_alloc *ei;
+        /* 注意此处分配的是struct socket_alloc结构，并且是从专门的sock_inode_cachep链中分配 */
 	ei = (struct socket_alloc *)kmem_cache_alloc(sock_inode_cachep, SLAB_KERNEL);
 	if (!ei)
 		return NULL;
@@ -319,6 +321,7 @@ static int init_inodecache(void)
 	return 0;
 }
 
+/* 网络文件系统的超级块操作函数 */
 static struct super_operations sockfs_ops = {
 	.alloc_inode =	sock_alloc_inode,
 	.destroy_inode =sock_destroy_inode,
@@ -471,6 +474,9 @@ static struct socket *sock_alloc(void)
 	if (!inode)
 		return NULL;
 
+        /* 注意在new_inode的时候分配的是一个socket_alloc结构，
+          * SOKCKET_I宏
+          */
 	sock = SOCKET_I(inode);
 
 	inode->i_mode = S_IFSOCK|S_IRWXUGO;

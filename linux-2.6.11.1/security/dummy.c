@@ -29,6 +29,10 @@
 #include <linux/ptrace.h>
 #include <linux/file.h>
 
+/* 安全结构体的所有默认回调都为空
+  * 也就是啥也不做 
+  */
+
 static int dummy_ptrace (struct task_struct *parent, struct task_struct *child)
 {
 	return 0;
@@ -845,6 +849,9 @@ struct security_operations dummy_security_ops;
 			}						\
 	} while (0)
 
+                     
+/* 如果安全结构体的字段为空，则设置为系统中默认的
+  */
 void security_fixup_ops (struct security_operations *ops)
 {
 	set_to_dummy_if_null(ops, ptrace);

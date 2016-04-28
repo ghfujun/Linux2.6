@@ -367,6 +367,12 @@ void __free_pages_ok(struct page *page, unsigned int order)
  *
  * -- wli
  */
+/* 参数low表示实际需要的order大小，
+  * 而high表示实际从哪个order连续块中分配,
+  * 如果当前的order大小的连续块没有，则会向order+1 
+  * 连续块中寻找，然后一部分分配出去，剩下一部分 
+  * 一次放到合适的order当中 
+  */
 static inline struct page *
 expand(struct zone *zone, struct page *page,
  	int low, int high, struct free_area *area)
@@ -445,10 +451,13 @@ static struct page *__rmqueue(struct zone *zone, unsigned int order)
 		if (list_empty(&area->free_list))
 			continue;
 
-                /* 获取也描述符，同时将page从lru链表中删除 */
+                /* 获取也描述符，同时将page从lru链表中删除,
+                  * 注意这里是使用lru来表示空闲块之间的连接关系
+                  */
 		page = list_entry(area->free_list.next, struct page, lru);
 		list_del(&page->lru);
 		rmv_page_order(page);
+                /* 连续order空闲块的数量减1，管理区中则要减少2的order次 */
 		area->nr_free--;
 		zone->free_pages -= 1UL << order;
 		return expand(zone, page, order, current_order, area);

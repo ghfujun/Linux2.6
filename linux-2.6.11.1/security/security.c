@@ -26,6 +26,7 @@ extern void security_fixup_ops(struct security_operations *ops);
 
 struct security_operations *security_ops;	/* Initialized to NULL */
 
+/* 检查所有回调函数是否为空，如果为空则设置为默认的 */
 static inline int verify(struct security_operations *ops)
 {
 	/* verify the security_operations structure exists */
@@ -79,6 +80,8 @@ int __init security_init(void)
  * If there is already a security module registered with the kernel,
  * an error will be returned.  Otherwise 0 is returned on success.
  */
+/* 注册一个安全操作符  
+  */
 int register_security(struct security_operations *ops)
 {
 	if (verify(ops)) {
@@ -87,6 +90,9 @@ int register_security(struct security_operations *ops)
 		return -EINVAL;
 	}
 
+        /* 这里的在注册之前security_ops变量必须是dummy_security_ops，
+          * 这样做的目的是？
+          */
 	if (security_ops != &dummy_security_ops)
 		return -EAGAIN;
 

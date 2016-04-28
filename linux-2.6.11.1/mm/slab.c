@@ -623,14 +623,17 @@ static kmem_cache_t * kmem_find_general_cachep (size_t size, int gfpflags)
 }
 
 /* Cal the num objs, wastage, and bytes left over for a given slab size. */
+/* 计算一个slab中内存的占用情况 */
 static void cache_estimate (unsigned long gfporder, size_t size, size_t align,
 		 int flags, size_t *left_over, unsigned int *num)
 {
 	int i;
+        /* wastage表示一个slab中总内存的大小 */
 	size_t wastage = PAGE_SIZE<<gfporder;
 	size_t extra = 0;
 	size_t base = 0;
 
+        /* struct slab描述符是否存放在slab当中 */
 	if (!(flags & CFLGS_OFF_SLAB)) {
 		base = sizeof(struct slab);
 		extra = sizeof(kmem_bufctl_t);
@@ -1346,6 +1349,7 @@ kmem_cache_create (const char *name, size_t size, size_t align,
 
 	size = ALIGN(size, align);
 
+        /* 如果slab中对象的大小小于一个页框，则相应的gfporder为0 */
 	if ((flags & SLAB_RECLAIM_ACCOUNT) && size <= PAGE_SIZE) {
 		/*
 		 * A VFS-reclaimable slab tends to have most allocations
@@ -1475,6 +1479,7 @@ next:
 					((unsigned long)cachep)%REAPTIMEOUT_LIST3;
 
 	/* Need the semaphore to access the chain. */
+        /* 此时将创建的kmem_cache_t添加到cache_chain链表当中 */
 	down(&cache_chain_sem);
 	{
 		struct list_head *p;
@@ -1724,17 +1729,21 @@ static struct slab* alloc_slabmgmt (kmem_cache_t *cachep,
 	return slabp;
 }
 
+/* 获取slab中对象的偏移数组 */
 static inline kmem_bufctl_t *slab_bufctl(struct slab *slabp)
 {
 	return (kmem_bufctl_t *)(slabp+1);
 }
 
+/* slab中对象的初始化 */
 static void cache_init_objs (kmem_cache_t * cachep,
 			struct slab * slabp, unsigned long ctor_flags)
 {
 	int i;
 
+        /* 依次扫描一个slab中的所有对象 */
 	for (i = 0; i < cachep->num; i++) {
+                /* 获取地i个对象的地址 */
 		void* objp = slabp->s_mem+cachep->objsize*i;
 #if DEBUG
 		/* need to poison the objs? */
@@ -1765,13 +1774,17 @@ static void cache_init_objs (kmem_cache_t * cachep,
 		}
 		if ((cachep->objsize % PAGE_SIZE) == 0 && OFF_SLAB(cachep) && cachep->flags & SLAB_POISON)
 	       		kernel_map_pages(virt_to_page(objp), cachep->objsize/PAGE_SIZE, 0);
-#else
+#else    
+                /* 如果存在对象的构造函数，则调用 */
 		if (cachep->ctor)
 			cachep->ctor(objp, cachep, ctor_flags);
 #endif
+                /* 设置对象的offset */
 		slab_bufctl(slabp)[i] = i+1;
 	}
+        /* 设置最后一个对象的offset为结束 */
 	slab_bufctl(slabp)[i-1] = BUFCTL_END;
+        /* 设置第一个空闲下标为0 */
 	slabp->free = 0;
 }
 
@@ -1865,6 +1878,7 @@ static int cache_grow (kmem_cache_t * cachep, int flags, int nodeid)
 
 	set_slab_attr(cachep, slabp, objp);
 
+        /* 初始化slab中的对象和内存布局 */
 	cache_init_objs(cachep, slabp, ctor_flags);
 
 	if (local_flags & __GFP_WAIT)
@@ -2322,6 +2336,7 @@ static inline void __cache_free (kmem_cache_t *cachep, void* objp)
  * Allocate an object from this cache.  The flags are only relevant
  * if the cache has no available objects.
  */
+/* 从cache中分配一个对象 */
 void * kmem_cache_alloc (kmem_cache_t *cachep, int flags)
 {
 	return __cache_alloc(cachep, flags);
