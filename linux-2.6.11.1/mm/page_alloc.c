@@ -437,7 +437,7 @@ static void prep_new_page(struct page *page, int order)
  * Do the hard work of removing an element from the buddy allocator.
  * Call me with the zone->lock already held.
  */
-/* 用来在管理区中找到一个空闲块，
+/* 用来在管理区中找到一个2的order次页的空闲块，
   * 如果页框分配成功，就返回第一个被分配页框的页描述符
   */
 static struct page *__rmqueue(struct zone *zone, unsigned int order)
@@ -629,6 +629,7 @@ static inline void prep_zero_page(struct page *page, int order, int gfp_flags)
  * we cheat by calling it from here, in the order > 0 path.  Saves a branch
  * or two.
  */
+/* 从内存区中分配内存 */
 static struct page *
 buffered_rmqueue(struct zone *zone, int order, int gfp_flags)
 {
@@ -742,6 +743,7 @@ __alloc_pages(unsigned int gfp_mask, unsigned int order,
 
  restart:
 	/* Go through the zonelist once, looking for a zone with enough free */
+        /* 扫描内存区 */
 	for (i = 0; (z = zones[i]) != NULL; i++) {
 
 		if (!zone_watermark_ok(z, order, z->pages_low,
@@ -815,6 +817,7 @@ rebalance:
 				continue;
 
 			page = buffered_rmqueue(z, order, gfp_mask);
+                        /* 此处表示如果已经成功分配到了内存，则直接退出 */
 			if (page)
 				goto got_pg;
 		}
@@ -876,6 +879,7 @@ EXPORT_SYMBOL(__alloc_pages);
 /*
  * Common helper functions.
  */
+/* 分配2的order次页的物理内存 */
 fastcall unsigned long __get_free_pages(unsigned int gfp_mask, unsigned int order)
 {
 	struct page * page;

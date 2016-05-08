@@ -60,6 +60,8 @@
  */
 #define in_irq()		(hardirq_count())
 #define in_softirq()		(softirq_count())
+
+/* 判断当前是否在中断上下文当中 */
 #define in_interrupt()		(irq_count())
 
 #if defined(CONFIG_PREEMPT) && !defined(CONFIG_PREEMPT_BKL)

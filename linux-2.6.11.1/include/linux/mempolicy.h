@@ -59,6 +59,7 @@ struct vm_area_struct;
  */
 struct mempolicy {
 	atomic_t refcnt;
+	/* 内存的管理策略 */
 	short policy; 	/* See MPOL_* above */
 	union {
 		struct zonelist  *zonelist;	/* bind */

@@ -750,6 +750,7 @@ asmlinkage long sys_fchown(unsigned int fd, uid_t user, gid_t group)
  * for the internal routines (ie open_namei()/follow_link() etc). 00 is
  * used by symlinks.
  */
+/* 来实现真正的打开文件操作 */
 struct file *filp_open(const char * filename, int flags, int mode)
 {
 	int namei_flags, error;
@@ -920,6 +921,7 @@ EXPORT_SYMBOL(put_unused_fd);
  * will follow.
  */
 
+/* 完成file指针和文件描述符之间的关系 */
 void fastcall fd_install(unsigned int fd, struct file * file)
 {
 	struct files_struct *files = current->files;
@@ -932,6 +934,7 @@ void fastcall fd_install(unsigned int fd, struct file * file)
 
 EXPORT_SYMBOL(fd_install);
 
+/* 打开文件系统调用 */
 asmlinkage long sys_open(const char __user * filename, int flags, int mode)
 {
 	char * tmp;
@@ -989,6 +992,7 @@ int filp_close(struct file *filp, fl_owner_t id)
 	if (retval)
 		filp->f_error = 0;
 
+        /* 查看文件引用计数 */
 	if (!file_count(filp)) {
 		printk(KERN_ERR "VFS: Close: file count is 0\n");
 		return retval;

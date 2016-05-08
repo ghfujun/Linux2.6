@@ -54,6 +54,7 @@ static unsigned long __init init_bootmem_core (pg_data_t *pgdat,
 	bootmem_data_t *bdata = pgdat->bdata;
 	unsigned long mapsize = ((end - start)+7)/8;
 
+        /* 设置内存节点之间的链表关系 */
 	pgdat->pgdat_next = pgdat_list;
 	pgdat_list = pgdat;
 

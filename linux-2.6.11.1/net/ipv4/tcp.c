@@ -1894,6 +1894,7 @@ static int wait_for_connect(struct sock *sk, long timeo)
  *	This will accept the next outstanding connection.
  */
 
+/* tcp协议层的accept实现 */
 struct sock *tcp_accept(struct sock *sk, int flags, int *err)
 {
 	struct tcp_sock *tp = tcp_sk(sk);

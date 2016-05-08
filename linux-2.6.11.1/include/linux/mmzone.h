@@ -259,7 +259,18 @@ struct zonelist {
  * per-zone basis.
  */
 struct bootmem_data;
-/* 内存节点结构 */
+
+
+/* Linux可以支持大量的架构，所以需要用一种与架构无关的方式去描述内存。
+  * 在linux的内存管理中，我们首先要明确的一个概念就是NUMA(Non-Uniform Memory Access,
+  * 关于NUMA的介绍可以参考我前面的文章)。很多大型机器都采用NUMA架构，
+  * 将内存和CPU分为很多组，每一组称为一个节点(node)。
+  * 节点与节点之间的互相访问，会因为“距离”的不同导致不同的开销。
+  * Linux通过struct pglist_data这个结构体来描述节点，对于UMA架构，
+  * Linux同样会保留节点的概念，只是整个系统就是一个节点，
+  * 只需要一个struct pglist_data来描述，它叫作contig_page_data. 
+  * 对于PC desktops这样的UMA结构，仅仅有一个称为contig_page_data的静态pg_data_t结构 
+  */
 typedef struct pglist_data {
 	struct zone node_zones[MAX_NR_ZONES];         /* 节点中管理区描述符的数组 */
 	struct zonelist node_zonelists[GFP_ZONETYPES];
