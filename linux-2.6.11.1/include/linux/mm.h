@@ -58,6 +58,8 @@ extern int sysctl_legacy_va_layout;
  * space that has a special rule for the page-fault handlers (ie a shared
  * library, the executable area etc).
  */
+/* 虚拟存储结构体，对用户空间的0-3GB进行管理
+  */
 struct vm_area_struct {
 	struct mm_struct * vm_mm;	/* The address space we belong to. */
 	unsigned long vm_start;		/* Our start address within vm_mm. */

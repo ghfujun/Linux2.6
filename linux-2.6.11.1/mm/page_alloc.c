@@ -708,6 +708,8 @@ int zone_watermark_ok(struct zone *z, int order, unsigned long mark,
 /*
  * This is the 'heart' of the zoned buddy allocator.
  */
+/* 在该函数中参数zonelist就代表一中内存的分配策略
+  */
 struct page * fastcall
 __alloc_pages(unsigned int gfp_mask, unsigned int order,
 		struct zonelist *zonelist)
@@ -739,17 +741,21 @@ __alloc_pages(unsigned int gfp_mask, unsigned int order,
 		return NULL;
 	}
 
+        /* 获取zones[0]管理区在当前节点中的管理区索引 */
 	classzone_idx = zone_idx(zones[0]);
 
  restart:
 	/* Go through the zonelist once, looking for a zone with enough free */
-        /* 扫描内存区 */
+        /* 扫描这种内存分配策略的内存区，
+          * 如果分配成功则直接返回 
+          */
 	for (i = 0; (z = zones[i]) != NULL; i++) {
 
 		if (!zone_watermark_ok(z, order, z->pages_low,
 				       classzone_idx, 0, 0))
 			continue;
-
+                
+                /* 从管理区中分配内存 */
 		page = buffered_rmqueue(z, order, gfp_mask);
 		if (page)
 			goto got_pg;
@@ -1380,6 +1386,7 @@ static int __init find_next_best_node(int node, nodemask_t *used_node_mask)
 	return best_node;
 }
 
+/* 构建存储节点的zonelist，也就是内存区的分配策略 */
 static void __init build_zonelists(pg_data_t *pgdat)
 {
 	int i, j, k, node, local_node;
@@ -1413,7 +1420,9 @@ static void __init build_zonelists(pg_data_t *pgdat)
 		for (i = 0; i < GFP_ZONETYPES; i++) {
 			zonelist = pgdat->node_zonelists + i;
 			for (j = 0; zonelist->zones[j] != NULL; j++);
-
+                        /* 默认是从NORMAL内存区中分配，
+                          * 然后就是DMA，最后是HIGHT
+                          */
 			k = ZONE_NORMAL;
 			if (i & __GFP_HIGHMEM)
 				k = ZONE_HIGHMEM;
@@ -1472,6 +1481,7 @@ static void __init build_zonelists(pg_data_t *pgdat)
 
 #endif	/* CONFIG_NUMA */
 
+/* 初始化所有存储节点的zonelist */
 void __init build_all_zonelists(void)
 {
 	int i;

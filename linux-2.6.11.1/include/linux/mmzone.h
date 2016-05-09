@@ -66,6 +66,7 @@ struct per_cpu_pageset {
 #define ZONE_NORMAL		1
 #define ZONE_HIGHMEM		2
 
+/* 节点中内存区的最大个数为3个 */
 #define MAX_NR_ZONES		3	/* Sync this with ZONES_SHIFT */
 #define ZONES_SHIFT		2	/* ceil(log2(MAX_NR_ZONES)) */
 
@@ -131,7 +132,11 @@ struct zone {
 	 * free areas of different sizes
 	 */
 	spinlock_t		lock;
-        /* 标识出管理区中的空闲页框块 */
+        /* 标识出管理区中的空闲页框块,是一个数组，
+          * 数组中最大的元素个数为MAX_ORDER。 
+          * 每一个元素都保持一个连续空闲页为2的order次 
+          * 内存块链表 
+          */
 	struct free_area	free_area[MAX_ORDER];
 
 
@@ -240,9 +245,15 @@ struct zone {
  * so despite the zonelist table being relatively big, the cache
  * footprint of this construct is very small.
  */
-/*  管理区链表 
+/*  表示节点中区的分配策略结构，每一个这样的结构都表示
+  * 从存储节点中从区中分配内存的策略，因为当有内存分配需求 
+  * 时，应该先从哪个区分配后从哪个区分配，可以通过该结构来确定 
   */ 
 struct zonelist {
+        /* 各个元素按照特定的次序指向具体的页面管理区，
+          * 表示分配页面时先试0，然后依次往后，这些管理区可以 
+          * 属于不同的存储节点
+          */
 	struct zone *zones[MAX_NUMNODES * MAX_NR_ZONES + 1]; // NULL delimited
 };
 

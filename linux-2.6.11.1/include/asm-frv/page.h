@@ -62,6 +62,7 @@ static inline int get_order(unsigned long size)
 
 #define devmem_is_allowed(pfn)	1
 
+/* 进程线性地址到物理地址的转换 */
 #define __pa(vaddr)		virt_to_phys((void *) vaddr)
 #define __va(paddr)		phys_to_virt((unsigned long) paddr)
 

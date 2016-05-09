@@ -12,8 +12,9 @@ struct vm_area_struct;
  * GFP bitmasks..
  */
 /* Zone modifiers in GFP_ZONEMASK (see linux/mmzone.h - low two bits) */
-#define __GFP_DMA	0x01
-#define __GFP_HIGHMEM	0x02
+/* 默认情况下是在NORMAL内存区中分配内存 */
+#define __GFP_DMA	0x01                 /* 在DMA内存区中分配 */
+#define __GFP_HIGHMEM	0x02           /* 该标记意味着在高内存区中分配*/
 
 /*
  * Action modifiers - doesn't change the zoning
@@ -88,6 +89,7 @@ static inline struct page *alloc_pages_node(int nid, unsigned int gfp_mask,
 	if (unlikely(order >= MAX_ORDER))
 		return NULL;
 
+        /* 注意这一点通过gfp_mask来确定到底使用哪种分配策略 */
 	return __alloc_pages(gfp_mask, order,
 		NODE_DATA(nid)->node_zonelists + (gfp_mask & GFP_ZONEMASK));
 }

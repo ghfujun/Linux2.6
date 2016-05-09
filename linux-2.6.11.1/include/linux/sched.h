@@ -208,6 +208,9 @@ extern void arch_unmap_area_topdown(struct vm_area_struct *area);
 struct mm_struct {
 	struct vm_area_struct * mmap;		/* list of VMAs */
 	struct rb_root mm_rb;
+        /* 指向上次使用找到的那个vma，最近使用的区间
+          * 很可能就是下一次要使用的空间 
+          */
 	struct vm_area_struct * mmap_cache;	/* last find_vma result */
 	unsigned long (*get_unmapped_area) (struct file *filp,
 				unsigned long addr, unsigned long len,
@@ -215,10 +218,14 @@ struct mm_struct {
 	void (*unmap_area) (struct vm_area_struct *area);
 	unsigned long mmap_base;		/* base of mmap area */
 	unsigned long free_area_cache;		/* first hole */
+        /*  pgd指向进程的页目录表，当内核调度一个
+          * 进程进入运行时，将这个指针转换成物理地址，
+          * 并写入控制寄存器CR3 
+          */ 
 	pgd_t * pgd;
 	atomic_t mm_users;			/* How many users with user space? */
 	atomic_t mm_count;			/* How many references to "struct mm_struct" (users count as 1) */
-	int map_count;				/* number of VMAs */
+	int map_count;				/* number of VMAs */ /* vma的数量 */
 	struct rw_semaphore mmap_sem;
 	spinlock_t page_table_lock;		/* Protects page tables, mm->rss, mm->anon_rss */
 

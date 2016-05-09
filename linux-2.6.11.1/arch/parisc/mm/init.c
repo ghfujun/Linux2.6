@@ -479,6 +479,7 @@ int do_check_pgt_cache(int low, int high)
 
 unsigned long *empty_zero_page;
 
+/* 显示系统内存 */
 void show_mem(void)
 {
 	int i,free = 0,total = 0,reserved = 0;
