@@ -2021,6 +2021,8 @@ static int do_file_page(struct mm_struct * mm, struct vm_area_struct * vma,
  * We enter with the pagetable spinlock held, we are supposed to
  * release it when done.
  */
+/* 内存换入函数
+  */
 static inline int handle_pte_fault(struct mm_struct *mm,
 	struct vm_area_struct * vma, unsigned long address,
 	int write_access, pte_t *pte, pmd_t *pmd)
@@ -2058,6 +2060,9 @@ static inline int handle_pte_fault(struct mm_struct *mm,
 /*
  * By the time we get here, we already hold the mm semaphore
  */
+/* 处理内存错误，如当前要访问的内存在交换区中
+  * 则该函数就要将内存从交换区中换入
+  */
 int handle_mm_fault(struct mm_struct *mm, struct vm_area_struct * vma,
 		unsigned long address, int write_access)
 {

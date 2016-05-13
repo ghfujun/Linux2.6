@@ -296,8 +296,8 @@ typedef struct pglist_data {
 					     range, including holes */
 	int node_id;              /* 节点标识符 */
 	struct pglist_data *pgdat_next;          /* 内存节点的下一项 */
-	wait_queue_head_t kswapd_wait;
-	struct task_struct *kswapd;
+	wait_queue_head_t kswapd_wait;     /* 等待操作存储节点的进程队列 */
+	struct task_struct *kswapd;                /* 该存储节点当中定期执行内存换出的进程 */
 	int kswapd_max_order;
 } pg_data_t;
 

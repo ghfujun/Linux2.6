@@ -127,7 +127,7 @@ struct ext3_inode_info {
 	 * by other means, so we have truncate_sem.
 	 */
 	struct semaphore truncate_sem;
-	struct inode vfs_inode;
+	struct inode vfs_inode;                  /* 容器计数的inode */
 };
 
 #endif	/* _LINUX_EXT3_FS_I */

@@ -1128,11 +1128,16 @@ out:
  * If there are applications that are active memory-allocators
  * (most normal use), this basically shouldn't matter.
  */
+
+/* 扫描内存的守护进程 */
 static int kswapd(void *p)
 {
 	unsigned long order;
 	pg_data_t *pgdat = (pg_data_t*)p;
 	struct task_struct *tsk = current;
+        /* 通过这里来初始化进程的等待结构，
+          * 同时指定等待结构的回调函数 
+          */
 	DEFINE_WAIT(wait);
 	struct reclaim_state reclaim_state = {
 		.reclaimed_slab = 0,
@@ -1257,10 +1262,12 @@ static int __devinit cpu_callback(struct notifier_block *nfb,
 }
 #endif /* CONFIG_HOTPLUG_CPU */
 
+/* 启动内核页面换出守护进程 */
 static int __init kswapd_init(void)
 {
 	pg_data_t *pgdat;
 	swap_setup();
+        /* 为每一个存储节点创建一个内存换出进程 */
 	for_each_pgdat(pgdat)
 		pgdat->kswapd
 		= find_task_by_pid(kernel_thread(kswapd, pgdat, CLONE_KERNEL));

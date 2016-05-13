@@ -2407,6 +2407,7 @@ void ext3_set_inode_flags(struct inode *inode)
 		inode->i_flags |= S_DIRSYNC;
 }
 
+/* 通过inode来读取对应文件的信息 */
 void ext3_read_inode(struct inode * inode)
 {
 	struct ext3_iloc iloc;

@@ -212,6 +212,7 @@ void fastcall detach_pid(task_t *task, enum pid_type type)
 	free_pidmap(nr);
 }
 
+/* 根据条件来查找进程的pcb */
 task_t *find_task_by_pid_type(int type, int nr)
 {
 	struct pid *pid;

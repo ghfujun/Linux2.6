@@ -160,8 +160,9 @@ struct proto_ops {
 				      int offset, size_t size, int flags);
 };
 
+/* 网络协议族结构 */
 struct net_proto_family {
-	int		family;
+	int		family;                /* 协议族的名称 */
 	int		(*create)(struct socket *sock, int protocol);
 	/* These are counters for the number of different methods of
 	   each we support */

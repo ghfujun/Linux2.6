@@ -10,6 +10,7 @@ enum pid_type
 	PIDTYPE_MAX
 };
 
+/* 进程的pid结构 */
 struct pid
 {
 	/* Try to keep pid_chain in the same cacheline as nr for find_pid */

@@ -559,7 +559,7 @@ struct proto {
 	int			*sysctl_rmem;
 	int			max_header;
 
-	kmem_cache_t		*slab;
+	kmem_cache_t		*slab;             /* 协议对应的高速缓存 */
 	int			slab_obj_size;
 
 	struct module		*owner;

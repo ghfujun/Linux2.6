@@ -76,6 +76,10 @@ unsigned long __initdata nr_all_pages;
 /*
  * Temporary debugging check for pages not lying within a given zone.
  */
+/* page是zone管理区中的一个页描述符，
+  * 该函数的作用就是判断该页描述符是否在 
+  * 该管理区对应的也描述符范围内 
+  */
 static int bad_range(struct zone *zone, struct page *page)
 {
 	if (page_to_pfn(page) >= zone->zone_start_pfn + zone->spanned_pages)
@@ -377,13 +381,19 @@ static inline struct page *
 expand(struct zone *zone, struct page *page,
  	int low, int high, struct free_area *area)
 {
+        /* 表示是连续size个页的内存 */
 	unsigned long size = 1 << high;
+
+        /* 如果high > low则表示连续的大内存块需要拆分
+          * 多余的内存则添加到order更小的连续内存链表当中
+          */
 
 	while (high > low) {
 		area--;
 		high--;
 		size >>= 1;
 		BUG_ON(bad_range(zone, &page[size]));
+                /* 把*/
 		list_add(&page[size].lru, &area->free_list);
 		area->nr_free++;
 		set_page_order(&page[size], high);
@@ -438,7 +448,8 @@ static void prep_new_page(struct page *page, int order)
  * Call me with the zone->lock already held.
  */
 /* 用来在管理区中找到一个2的order次页的空闲块，
-  * 如果页框分配成功，就返回第一个被分配页框的页描述符
+  * 如果页框分配成功，就返回第一个被分配页框的页描述符 
+  * 这就是linux的伙伴系统(buddy system) 
   */
 static struct page *__rmqueue(struct zone *zone, unsigned int order)
 {

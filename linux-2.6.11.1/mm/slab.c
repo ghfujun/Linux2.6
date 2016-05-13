@@ -516,7 +516,9 @@ static int slab_break_gfp_order = BREAK_GFP_ORDER_LO;
  * global 'mem_map'. These are used to find the slab an obj belongs to.
  * With kfree(), these are used to find the cache which an obj belongs to.
  */
+/* 设置物理页对应的高速缓冲头 */
 #define	SET_PAGE_CACHE(pg,x)  ((pg)->lru.next = (struct list_head *)(x))
+
 #define	GET_PAGE_CACHE(pg)    ((kmem_cache_t *)(pg)->lru.next)
 #define	SET_PAGE_SLAB(pg,x)   ((pg)->lru.prev = (struct list_head *)(x))
 #define	GET_PAGE_SLAB(pg)     ((struct slab *)(pg)->lru.prev)

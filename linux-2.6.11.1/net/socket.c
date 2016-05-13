@@ -1106,6 +1106,10 @@ static int __sock_create(int family, int type, int protocol, struct socket **res
 		family = PF_PACKET;
 	}
 
+        /* 通过系统的安全模块LSM来检查安全性，
+          * 如常用的selinux安全模型，如果系统中没有开启 
+          * 则相当于这个函数什么都没有做 
+          */
 	err = security_socket_create(family, type, protocol, kern);
 	if (err)
 		return err;
