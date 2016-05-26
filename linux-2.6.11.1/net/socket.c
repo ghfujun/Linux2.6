@@ -346,6 +346,8 @@ static int sockfs_delete_dentry(struct dentry *dentry)
 {
 	return 1;
 }
+
+/* 网络文件系统的目录操作函数 */
 static struct dentry_operations sockfs_dentry_operations = {
 	.d_delete =	sockfs_delete_dentry,
 };
@@ -367,6 +369,7 @@ static struct dentry_operations sockfs_dentry_operations = {
  *	but we take care of internal coherence yet.
  */
 
+/* 获取socket对应的文件描述符 */
 int sock_map_fd(struct socket *sock)
 {
 	int fd;
@@ -1258,7 +1261,7 @@ asmlinkage long sys_socketpair(int family, int type, int protocol, int __user *u
 	/* fd1 and fd2 may be already another descriptors.
 	 * Not kernel problem.
 	 */
-
+	/* 设置对应的套接字描述符 */
 	err = put_user(fd1, &usockvec[0]); 
 	if (!err)
 		err = put_user(fd2, &usockvec[1]);

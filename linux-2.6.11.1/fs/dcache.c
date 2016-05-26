@@ -63,6 +63,7 @@ static struct hlist_head *dentry_hashtable;
 static LIST_HEAD(dentry_unused);
 
 /* Statistics gathering. */
+/* 统计dentry信息的结构 */
 struct dentry_stat_t dentry_stat = {
 	.age_limit = 45,
 };
@@ -751,6 +752,7 @@ struct dentry *d_alloc(struct dentry * parent, const struct qstr *name)
 	INIT_LIST_HEAD(&dentry->d_subdirs);
 	INIT_LIST_HEAD(&dentry->d_alias);
 
+        /* 设置目录的父目录 */
 	if (parent) {
 		dentry->d_parent = dget(parent);
 		dentry->d_sb = parent->d_sb;
@@ -759,6 +761,7 @@ struct dentry *d_alloc(struct dentry * parent, const struct qstr *name)
 	}
 
 	spin_lock(&dcache_lock);
+        /* 将其添加到父目录的孩子目录中 */
 	if (parent)
 		list_add(&dentry->d_child, &parent->d_subdirs);
 	dentry_stat.nr_dentry++;

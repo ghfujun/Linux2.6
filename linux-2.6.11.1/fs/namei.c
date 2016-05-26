@@ -640,6 +640,8 @@ struct path {
  *  small and for now I'd prefer to have fast path as straight as possible.
  *  It _is_ time-critical.
  */
+
+/* 开始真正的路径查找 */
 static int do_lookup(struct nameidata *nd, struct qstr *name,
 		     struct path *path)
 {
@@ -952,6 +954,7 @@ set_it:
 	}
 }
 
+/* 查找name指定的路径 */
 int fastcall path_lookup(const char *name, unsigned int flags, struct nameidata *nd)
 {
 	int retval;
@@ -1351,6 +1354,7 @@ int may_open(struct nameidata *nd, int acc_mode, int flag)
  * for symlinks (where the permissions are checked later).
  * SMP-safe
  */
+/* 根据路径来打开文件 */
 int open_namei(const char * pathname, int flag, int mode, struct nameidata *nd)
 {
 	int acc_mode, error = 0;
@@ -1372,6 +1376,7 @@ int open_namei(const char * pathname, int flag, int mode, struct nameidata *nd)
 	/*
 	 * The simplest case - just a plain lookup.
 	 */
+        /* 如果没有使用创建标记，也就是不存在就不创建  */
 	if (!(flag & O_CREAT)) {
 		error = path_lookup(pathname, lookup_flags(flag)|LOOKUP_OPEN, nd);
 		if (error)

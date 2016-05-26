@@ -102,6 +102,9 @@ enum sock_type {
  *  @type - socket type (%SOCK_STREAM, etc)
  *  @passcred - credentials (used only in Unix Sockets (aka PF_LOCAL))
  */
+/* 注意这里并没有指针指向inode指针，然是用容器计数来实现的，
+  * 如果想要获取inode可以通过另外一种方式，socket->file->dentry->inode
+  */
 struct socket {
 	socket_state		state;
 	unsigned long		flags;

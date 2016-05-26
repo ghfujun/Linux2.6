@@ -428,6 +428,11 @@ struct inode {
 	struct hlist_node	i_hash;
 	struct list_head	i_list;             /* 在使用当中的inode链表 */
 	struct list_head	i_sb_list;        /* 同一个超级块中的inode链表 */
+        /* 因为一个inode可以对应多个dentry结构，即一个文件可以有不止一个文件名或路径名。
+          * 因为一个已经建立的文件可以被链接到其他文件名。所以inode结构中有一个i_dentry，
+          * 凡是代表着同一个文件的所有目录项都通过其dentry结构体中的d_alias域挂入相应的 
+          * inode结构体中的i_dentry队列中。 
+          */ 
 	struct list_head	i_dentry;
 	unsigned long		i_ino;   /* i节点号 */
 	atomic_t		i_count;

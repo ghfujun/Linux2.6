@@ -80,7 +80,10 @@ struct dcookie_struct;
 
 #define DNAME_INLINE_LEN_MIN 36
 
-/* 目录结构 */
+/* 目录结构，既可以表示一个文件也可以表示一个目录，
+  * 一个目录本身也是一个文件，该结构主要是指文件的逻辑结构 
+  * inode则对应文件的物理结构，如和相应的文件系统的inode结构对应  
+  */
 struct dentry {
 	atomic_t d_count;
 	unsigned int d_flags;		/* protected by d_lock */
@@ -91,18 +94,27 @@ struct dentry {
 	 * The next three fields are touched by __d_lookup.  Place them here
 	 * so they all fit in a 16-byte range, with 16-byte alignment.
 	 */
+        /* 指向目录的父目录 */
 	struct dentry *d_parent;	/* parent directory */
-	struct qstr d_name;
+        /* 路径的名称 */
+	struct qstr d_name;               
 
+        /* 服务于LRU算法(近期最少使用算法) */
 	struct list_head d_lru;		/* LRU list */
+        /* 目录的孩子链表 */
 	struct list_head d_child;	/* child of parent list */
 	struct list_head d_subdirs;	/* our children */
+        /* 一个inode对应一个物理文件，但是在Linux系统中存在连接，
+          * 也就是可以从不同位置访问到同一个文件，而不同的文件路径 
+          * 则对应该dentry结构，然后通过该结构的d_alias链表连接在inode的i_dentry 
+          * 变量当中  
+          */
 	struct list_head d_alias;	/* inode alias list */
 	unsigned long d_time;		/* used by d_revalidate */
 	struct dentry_operations *d_op;/* 目录操作函数 */
 	struct super_block *d_sb;	/* The root of the dentry tree */
 	void *d_fsdata;			/* fs-specific data */
- 	struct rcu_head d_rcu;
+ 	struct rcu_head d_rcu;           /* 目录和文件的rcu结构 */
 	struct dcookie_struct *d_cookie; /* cookie, if any */
 	struct hlist_node d_hash;	/* lookup hash list */	
 	int d_mounted;
@@ -288,6 +300,7 @@ extern char * d_path(struct dentry *, struct vfsmount *, char *, int);
  *	and call dget_locked() instead of dget().
  */
  
+/* 增加引用计数 */ 
 static inline struct dentry *dget(struct dentry *dentry)
 {
 	if (dentry) {

@@ -43,6 +43,7 @@ struct vfsmount
 	struct namespace *mnt_namespace; /* containing namespace */
 };
 
+/* 增加挂载点的引用计数 */
 static inline struct vfsmount *mntget(struct vfsmount *mnt)
 {
 	if (mnt)

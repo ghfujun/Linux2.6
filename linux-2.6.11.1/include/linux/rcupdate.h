@@ -47,6 +47,8 @@
  * @next: next update requests in a list
  * @func: actual update function to call after the grace period.
  */
+
+/* rcu机制结构 */
 struct rcu_head {
 	struct rcu_head *next;
 	void (*func)(struct rcu_head *head);
