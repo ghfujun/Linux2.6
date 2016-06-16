@@ -565,6 +565,7 @@ out:
 	return sk;
 }
 
+/* unix域套接字的创建 */
 static int unix_create(struct socket *sock, int protocol)
 {
 	if (protocol && protocol != PF_UNIX)
@@ -2046,6 +2047,7 @@ static inline void unix_sysctl_register(void) {}
 static inline void unix_sysctl_unregister(void) {}
 #endif
 
+/* unix协议族的初始化 */
 static int __init af_unix_init(void)
 {
 	struct sk_buff *dummy_skb;

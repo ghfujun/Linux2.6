@@ -641,7 +641,7 @@ struct path {
  *  It _is_ time-critical.
  */
 
-/* å¼€å§‹çœŸæ­£çš„è·¯å¾„æŸ¥æ‰¾ */
+/* å¼€å§ ? æ­£ç  è· å¾ ?¥æ ?*/
 static int do_lookup(struct nameidata *nd, struct qstr *name,
 		     struct path *path)
 {
@@ -954,7 +954,7 @@ set_it:
 	}
 }
 
-/* æŸ¥æ‰¾nameæŒ‡å®šçš„è·¯å¾„ */
+/* ?¥æ ?ame? å® ? è· å¾  */
 int fastcall path_lookup(const char *name, unsigned int flags, struct nameidata *nd)
 {
 	int retval;
@@ -1354,7 +1354,7 @@ int may_open(struct nameidata *nd, int acc_mode, int flag)
  * for symlinks (where the permissions are checked later).
  * SMP-safe
  */
-/* æ ¹æ®è·¯å¾„æ¥æ‰“å¼€æ–‡ä»¶ */
+/* ?¹æ  è· å¾ ?¥æ  å¼€? ä»?*/
 int open_namei(const char * pathname, int flag, int mode, struct nameidata *nd)
 {
 	int acc_mode, error = 0;
@@ -1376,7 +1376,7 @@ int open_namei(const char * pathname, int flag, int mode, struct nameidata *nd)
 	/*
 	 * The simplest case - just a plain lookup.
 	 */
-        /* å¦‚æœæ²¡æœ‰ä½¿ç”¨åˆ›å»ºæ ‡è®°ï¼Œä¹Ÿå°±æ˜¯ä¸å­˜åœ¨å°±ä¸åˆ›å»º  */
+        /* å¦ ? æ²¡æ  ä½¿ç ¨å  å»ºæ  è®°ï?ä¹ å°±æ  ä¸ å­ ?¨å°±ä¸ ? å»? */
 	if (!(flag & O_CREAT)) {
 		error = path_lookup(pathname, lookup_flags(flag)|LOOKUP_OPEN, nd);
 		if (error)

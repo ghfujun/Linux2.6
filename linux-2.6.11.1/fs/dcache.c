@@ -795,14 +795,18 @@ struct dentry *d_alloc_name(struct dentry *parent, const char *name)
  * in use by the dcache.
  */
  
+/* 因为一个inode可以有多个dentry可以和它对应 */
 void d_instantiate(struct dentry *entry, struct inode * inode)
 {
+        /* 判断该entry是不是某个inode别名 */
 	if (!list_empty(&entry->d_alias)) BUG();
 	spin_lock(&dcache_lock);
 	if (inode)
-		list_add(&entry->d_alias, &inode->i_dentry);
+		list_add(&entry->d_alias, &inode->i_dentry);    /* 将当前的entry添加到inode的i_dentry链表当中 */
+        /* 设置entry的d_inode为inode */
 	entry->d_inode = inode;
 	spin_unlock(&dcache_lock);
+        /* 进行安全性操作 */
 	security_d_instantiate(entry, inode);
 }
 

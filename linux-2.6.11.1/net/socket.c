@@ -1224,6 +1224,10 @@ out_release:
  *	Create a pair of connected sockets.
  */
 
+/* unix域的套接字操作，一段该函数创建成功，
+  * 就表明两个对等的套接字创建成功，然后 
+  * 就可以直接进行全双工通信 
+  */
 asmlinkage long sys_socketpair(int family, int type, int protocol, int __user *usockvec)
 {
 	struct socket *sock1, *sock2;

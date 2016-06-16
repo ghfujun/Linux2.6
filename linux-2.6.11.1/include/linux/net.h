@@ -106,13 +106,13 @@ enum sock_type {
   * 如果想要获取inode可以通过另外一种方式，socket->file->dentry->inode
   */
 struct socket {
-	socket_state		state;
+	socket_state		state;              /* socket的状态 */
 	unsigned long		flags;
 	struct proto_ops	*ops;
 	struct fasync_struct	*fasync_list;
 	struct file		*file;                 /* 指向对应的文件描述符 */
-	struct sock		*sk;
-	wait_queue_head_t	wait;
+	struct sock		*sk;                  /*  socket对应的struct sock结果 */
+	wait_queue_head_t	wait;       /* 进程的等待队列 */
 	short			type;
 	unsigned char		passcred;
 };

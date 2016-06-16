@@ -104,12 +104,12 @@ struct sock;
   */
 struct sock_common {
 	unsigned short		skc_family;
-	volatile unsigned char	skc_state;
+	volatile unsigned char	skc_state;              /* sock的状态 */
 	unsigned char		skc_reuse;
 	int			skc_bound_dev_if;
 	struct hlist_node	skc_node;
 	struct hlist_node	skc_bind_node;
-	atomic_t		skc_refcnt;
+	atomic_t		skc_refcnt;      /* sock的引用计数 */
 };
 
 /**
