@@ -253,8 +253,10 @@ struct sock {
 	kmem_cache_t		*sk_slab;
 	struct timer_list	sk_timer;
 	struct timeval		sk_stamp;
+        /* sock对应的socket结构 */
 	struct socket		*sk_socket;
 	void			*sk_user_data;
+        /* 模块的拥有者 */
 	struct module		*sk_owner;
 	struct page		*sk_sndmsg_page;
 	__u32			sk_sndmsg_off;
@@ -263,6 +265,7 @@ struct sock {
 	void			*sk_security;
 	__u8			sk_queue_shrunk;
 	/* three bytes hole, try to pack */
+        /* sock当中的一些回调 */
 	void			(*sk_state_change)(struct sock *sk);
 	void			(*sk_data_ready)(struct sock *sk, int bytes);
 	void			(*sk_write_space)(struct sock *sk);

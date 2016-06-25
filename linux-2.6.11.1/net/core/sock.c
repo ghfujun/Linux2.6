@@ -618,7 +618,9 @@ static kmem_cache_t *sk_cachep;
  *	private slabcaches have different sizes of the generic struct sock.
  *	1 has been kept as a way to say sizeof(struct sock).
  */
-/* 分配一个struct sock结构 */
+/* 分配一个struct sock结构，
+  * 最后两个参数给予了sock分配的灵活性，例如inet，unix协议域
+  */
 struct sock *sk_alloc(int family, int priority, int zero_it, kmem_cache_t *slab)
 {
 	struct sock *sk = NULL;
@@ -636,6 +638,7 @@ struct sock *sk_alloc(int family, int priority, int zero_it, kmem_cache_t *slab)
 		}
 		sk->sk_slab = slab;
 		
+                /* 进行安全性检查 */
 		if (security_sk_alloc(sk, family, priority)) {
 			kmem_cache_free(slab, sk);
 			sk = NULL;
@@ -1165,6 +1168,7 @@ void sk_stop_timer(struct sock *sk, struct timer_list* timer)
 
 EXPORT_SYMBOL(sk_stop_timer);
 
+/* 设置socket和sock的关系 */
 void sock_init_data(struct socket *sock, struct sock *sk)
 {
 	skb_queue_head_init(&sk->sk_receive_queue);
@@ -1175,6 +1179,7 @@ void sock_init_data(struct socket *sock, struct sock *sk)
 
 	init_timer(&sk->sk_timer);
 	
+        /* 设置sock的内存分配和接收，发送缓存大小 */
 	sk->sk_allocation	=	GFP_KERNEL;
 	sk->sk_rcvbuf		=	sysctl_rmem_default;
 	sk->sk_sndbuf		=	sysctl_wmem_default;
@@ -1193,6 +1198,7 @@ void sock_init_data(struct socket *sock, struct sock *sk)
 	rwlock_init(&sk->sk_dst_lock);
 	rwlock_init(&sk->sk_callback_lock);
 
+        /* 设置sock的一些回调 */
 	sk->sk_state_change	=	sock_def_wakeup;
 	sk->sk_data_ready	=	sock_def_readable;
 	sk->sk_write_space	=	sock_def_write_space;

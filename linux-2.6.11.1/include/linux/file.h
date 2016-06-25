@@ -19,6 +19,7 @@
 /*
  * Open file table structure
  */
+/* 进程打开的文件结构 */
 struct files_struct {
         atomic_t count;
         spinlock_t file_lock;     /* Protects all the below members.  Nests inside tsk->alloc_lock */

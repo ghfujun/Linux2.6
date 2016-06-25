@@ -469,6 +469,7 @@ static int unix_dgram_connect(struct socket *, struct sockaddr *,
 static int unix_seqpacket_sendmsg(struct kiocb *, struct socket *,
 				  struct msghdr *, size_t);
 
+/* unix协议域的函数操作集 */
 static struct proto_ops unix_stream_ops = {
 	.family =	PF_UNIX,
 	.owner =	THIS_MODULE,
@@ -532,6 +533,7 @@ static struct proto_ops unix_seqpacket_ops = {
 	.sendpage =	sock_no_sendpage,
 };
 
+/* unix域套接字的真正创建 */
 static struct sock * unix_create1(struct socket *sock)
 {
 	struct sock *sk = NULL;
@@ -553,6 +555,8 @@ static struct sock * unix_create1(struct socket *sock)
 	sk->sk_write_space	= unix_write_space;
 	sk->sk_max_ack_backlog	= sysctl_unix_max_dgram_qlen;
 	sk->sk_destruct		= unix_sock_destructor;
+
+        /*  类型转换  */
 	u	  = unix_sk(sk);
 	u->dentry = NULL;
 	u->mnt	  = NULL;
@@ -573,6 +577,7 @@ static int unix_create(struct socket *sock, int protocol)
 
 	sock->state = SS_UNCONNECTED;
 
+        /* 设置协议族的操作指针 */
 	switch (sock->type) {
 	case SOCK_STREAM:
 		sock->ops = &unix_stream_ops;
@@ -2033,6 +2038,9 @@ static struct file_operations unix_seq_fops = {
 
 #endif
 
+/* unix域网络协议族，在创建unix的协议域时，
+  * 调用当中的unix_create函数来具体完成
+  */
 static struct net_proto_family unix_family_ops = {
 	.family = PF_UNIX,
 	.create = unix_create,

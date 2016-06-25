@@ -334,6 +334,9 @@ static struct super_block *sockfs_get_sb(struct file_system_type *fs_type,
 	return get_sb_pseudo(fs_type, "socket:", &sockfs_ops, SOCKFS_MAGIC);
 }
 
+/* sock文件系统的挂载点，所有类型的inode节点都是通过sb来进行分配的，
+  * 而一个sb则对应一个特定的文件系统 
+  */
 static struct vfsmount *sock_mnt;
 
 /* sockfs文件系统类型的结构 */
@@ -369,7 +372,9 @@ static struct dentry_operations sockfs_dentry_operations = {
  *	but we take care of internal coherence yet.
  */
 
-/* 获取socket对应的文件描述符 */
+/* 获取socket对应的文件描述符，注意在映射文件描述符和socket之间的关系时，
+  * 就设定了相应的f_op,d_op,i_op等等
+  */
 int sock_map_fd(struct socket *sock)
 {
 	int fd;
@@ -380,6 +385,7 @@ int sock_map_fd(struct socket *sock)
 	 *	Find a file descriptor suitable for return to the user. 
 	 */
 
+        /* 获取一个没有应用到的文件描述符 */
 	fd = get_unused_fd();
 	if (fd >= 0) {
 		struct file *file = get_empty_filp();
@@ -1159,6 +1165,7 @@ static int __sock_create(int family, int type, int protocol, struct socket **res
 	if (!try_module_get(net_families[family]->owner))
 		goto out_release;
 
+        /* 调用具体的网络协议族来创建socket */
 	if ((err = net_families[family]->create(sock, protocol)) < 0)
 		goto out_module_put;
 	/*
@@ -1920,6 +1927,7 @@ static unsigned char nargs[18]={AL(0),AL(3),AL(3),AL(3),AL(2),AL(3),
  *  it is set by the callees. 
  */
 
+/* socket相关的系统调用 */
 asmlinkage long sys_socketcall(int call, unsigned long __user *args)
 {
 	unsigned long a[6];

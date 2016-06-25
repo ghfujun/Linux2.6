@@ -61,6 +61,7 @@ struct unix_skb_parms {
 /* The AF_UNIX socket */
 struct unix_sock {
 	/* WARNING: sk has to be the first member */
+        /* 因为进行了内存对齐，所以必须在第一个成员 */
 	struct sock		sk;
         struct unix_address     *addr;
         struct dentry		*dentry;

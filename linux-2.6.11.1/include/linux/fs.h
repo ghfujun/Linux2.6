@@ -456,6 +456,7 @@ struct inode {
 	struct rw_semaphore	i_alloc_sem;
 	struct inode_operations	*i_op;
 	struct file_operations	*i_fop;	/* former ->i_op->default_file_ops */
+	/* inode对应的超级块 */
 	struct super_block	*i_sb;
 	struct file_lock	*i_flock;
 	struct address_space	*i_mapping;

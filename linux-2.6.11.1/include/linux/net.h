@@ -108,7 +108,7 @@ enum sock_type {
 struct socket {
 	socket_state		state;              /* socket的状态 */
 	unsigned long		flags;
-	struct proto_ops	*ops;
+	struct proto_ops	*ops;            /* 协议族的操作集合 */
 	struct fasync_struct	*fasync_list;
 	struct file		*file;                 /* 指向对应的文件描述符 */
 	struct sock		*sk;                  /*  socket对应的struct sock结果 */

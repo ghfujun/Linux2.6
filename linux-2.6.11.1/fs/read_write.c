@@ -219,6 +219,7 @@ ssize_t do_sync_read(struct file *filp, char __user *buf, size_t len, loff_t *pp
 
 EXPORT_SYMBOL(do_sync_read);
 
+/* VFS文件系统的读操作 */
 ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
 {
 	ssize_t ret;
