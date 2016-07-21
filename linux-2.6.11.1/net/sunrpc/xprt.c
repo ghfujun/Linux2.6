@@ -1011,6 +1011,7 @@ tcp_data_recv(read_descriptor_t *rd_desc, struct sk_buff *skb,
 	return len - desc.count;
 }
 
+/* tcp数据准备好后的回调函数 */
 static void tcp_data_ready(struct sock *sk, int bytes)
 {
 	struct rpc_xprt *xprt;

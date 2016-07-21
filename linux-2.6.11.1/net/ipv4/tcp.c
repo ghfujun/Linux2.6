@@ -327,6 +327,9 @@ static __inline__ unsigned int tcp_listen_poll(struct sock *sk,
  *	take care of normal races (between the test and the event) and we don't
  *	go look at any of the socket buffers directly.
  */
+/* 该函数会在ep_insert函数中调用
+  * poll_table表示一个监听项和监听项的回调函数 
+  */
 unsigned int tcp_poll(struct file *file, struct socket *sock, poll_table *wait)
 {
 	unsigned int mask;
@@ -337,6 +340,7 @@ unsigned int tcp_poll(struct file *file, struct socket *sock, poll_table *wait)
           * 注意传递过去的是sk的sk_sleep等待队列 
           */
 	poll_wait(file, sk->sk_sleep, wait);
+	/* 如果是监听套接字 */
 	if (sk->sk_state == TCP_LISTEN)
 		return tcp_listen_poll(sk, wait);
 

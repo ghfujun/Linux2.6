@@ -151,7 +151,7 @@
 /* Tells if the epoll_ctl(2) operation needs an event copy from userspace */
 #define EP_OP_HASH_EVENT(op) ((op) != EPOLL_CTL_DEL)
 
-/* 仅仅包含文件指针和文件描述符 */
+/* 仅仅包含文件指针和文件描述符，在epoll监听事件的红黑树查找中会用到  */
 struct epoll_filefd {
 	struct file *file;
 	int fd;
@@ -197,9 +197,11 @@ struct eventpoll {
 	struct rw_semaphore sem;
 
 	/* Wait queue used by sys_epoll_wait() */
+        /* epoll_wait使用的等待队列 */
 	wait_queue_head_t wq;
 
 	/* Wait queue used by file->poll() */
+        /* 注意这里的epoll文件描述符也是可以被其他的文件描述符来监视的 */
 	wait_queue_head_t poll_wait;
 
 	/* List of ready file descriptors */
@@ -209,26 +211,29 @@ struct eventpoll {
 	struct list_head rdllist;
 
 	/* RB-Tree root used to store monitored fd structs */
-        /* 事件池对应的红黑树的根节点 */
+        /* 事件池对应的红黑树的根节点，所有添加的监听事件都在此红黑树当中  */
 	struct rb_root rbr;
 };
 
 /* Wait structure used by the poll hooks */
+/* 也就是将该结构添加到如socket文件对应的sock->sk_sleep等待队列当中
+  * 当被唤醒时，其实就是唤醒结构中的wait
+  */
 struct eppoll_entry {
 	/* List header used to link this structure to the "struct epitem" */
 	struct list_head llink;
 
 	/* The "base" pointer is set to the container "struct epitem" */
-	void *base;
+	void *base;    /* 执行对应的struct epitem */
 
 	/*
 	 * Wait queue item that will be linked to the target file wait
 	 * queue head.
 	 */
-	wait_queue_t wait;
+	wait_queue_t wait;       /* 作为一个元素挂入被监听fd对应的sock->sk_sleep等待队列当中 */
 
 	/* The wait queue head that linked the "wait" wait queue item */
-	wait_queue_head_t *whead;
+	wait_queue_head_t *whead;  /* 被监听fd的等待队列，如果fd为socket，那么whead为sock->sk_sleep */
 };
 
 /*
@@ -237,10 +242,11 @@ struct eppoll_entry {
  */
 struct epitem {
 	/* RB-Tree node used to link this structure to the eventpoll rb-tree */
+        /* 该变量组成struct eventpoll中rbr的红黑树结构 */
 	struct rb_node rbn;
 
 	/* List header used to link this structure to the eventpoll ready list */
-	struct list_head rdllink;         /* 事件的就绪队列 */
+	struct list_head rdllink;         /* 事件的就绪队列，和struct eventpoll中的rdllist形成双向链表 */
 
 	/* The file descriptor information this item refers to */
 	struct epoll_filefd ffd;               /* 监听项对应的文件描述信息*/
@@ -249,13 +255,14 @@ struct epitem {
 	int nwait;
 
 	/* List containing poll wait queues */
+        /* 双向链表，保存着被监视文件的等待队列 */
 	struct list_head pwqlist;
 
 	/* The "container" of this item */
 	struct eventpoll *ep;              /* 指向包含自己的指针 */
 
 	/* The structure that describe the interested events and the source fd */
-	struct epoll_event event;           /* 监听项目对应的事件 */
+	struct epoll_event event;           /* 监听项目对应的事件,相当于是携带的参数和数据 */
 
 	/*
 	 * Used to keep track of the usage count of the structure. This avoids
@@ -266,16 +273,20 @@ struct epitem {
 	atomic_t usecnt;
 
 	/* List header used to link this item to the "struct file" items list */
-	struct list_head fllink;
+        /* 双向链表，用来链接被监视的文件描述符对应的的struct file
+          * 因为file里有f_ep_link用来保存所有监视这个文件的epoll节点 
+          */
+        struct list_head fllink;
 
 	/* List header used to link the item to the transfer list */
+        /* 在就绪队列中已经被转换的双向链表 */
 	struct list_head txlink;
 
 	/*
 	 * This is used during the collection/transfer of events to userspace
 	 * to pin items empty events set.
 	 */
-	unsigned int revents;
+	unsigned int revents;         /* 监听的事件  */
 };
 
 /* Wrapper struct used by poll queueing */
@@ -561,6 +572,7 @@ sys_epoll_ctl(int epfd, int op, int fd, struct epoll_event __user *event)
 
 	/* The target file descriptor must support poll */
 	error = -EPERM;
+        /* 文件操作函数集合一定要实现poll调用 */
 	if (!tfile->f_op || !tfile->f_op->poll)
 		goto eexit_3;
 
@@ -579,7 +591,7 @@ sys_epoll_ctl(int epfd, int op, int fd, struct epoll_event __user *event)
 	 * our own data structure.
 	 */
 	ep = file->private_data;
-
+        /* 注意获取信号量，下面一段代码是互斥的 */
 	down_write(&ep->sem);
 
 	/* Try to lookup the file inside our hash table */
@@ -616,6 +628,7 @@ sys_epoll_ctl(int epfd, int op, int fd, struct epoll_event __user *event)
 	 * The function ep_find() increments the usage count of the structure
 	 * so, if this is not NULL, we need to release it.
 	 */
+        /* 用完了之后就减小引用计数 */
 	if (epi)
 		ep_release_epitem(epi);
 
@@ -906,6 +919,10 @@ static void ep_release_epitem(struct epitem *epi)
  * This is the callback that is used to add our wait queue to the
  * target file wakeup lists.
  */
+/* 在poll当中调用的回调函数,
+  * file表示监听文件的struct file指针， 
+  * whead，如果是socket，则表示的是sock->sk_sleep等待队列  
+  */
 static void ep_ptable_queue_proc(struct file *file, wait_queue_head_t *whead,
 				 poll_table *pt)
 {
@@ -914,9 +931,12 @@ static void ep_ptable_queue_proc(struct file *file, wait_queue_head_t *whead,
 
 	if (epi->nwait >= 0 && (pwq = PWQ_MEM_ALLOC())) {
 		init_waitqueue_func_entry(&pwq->wait, ep_poll_callback);
+                /* 设置等待队列头和对应的epitem */
 		pwq->whead = whead;
 		pwq->base = epi;
+                /* 将pwq添加到whead的末尾 */
 		add_wait_queue(whead, &pwq->wait);
+                /* 将llink添加到pwqlist的末尾 */
 		list_add_tail(&pwq->llink, &epi->pwqlist);
 		epi->nwait++;
 	} else {
@@ -966,6 +986,9 @@ static int ep_insert(struct eventpoll *ep, struct epoll_event *event,
 	INIT_LIST_HEAD(&epi->txlink);
 	INIT_LIST_HEAD(&epi->pwqlist);
 	epi->ep = ep;
+        /* 设置epitem的文件描述符和文件指针，在ep_find函数中
+          * 会使用该两个变量在struct eventpoll中的rbr对应的红黑树中比值
+          */
 	EP_SET_FFD(&epi->ffd, tfile, fd);
 	epi->event = *event;
 	atomic_set(&epi->usecnt, 1);
@@ -999,10 +1022,13 @@ static int ep_insert(struct eventpoll *ep, struct epoll_event *event,
 	write_lock_irqsave(&ep->lock, flags);
 
 	/* Add the current item to the rb-tree */
+        /* 将epi插入到rbr的红黑树当中 */
 	ep_rbtree_insert(ep, epi);
 
 	/* If the file is already "ready" we drop it inside the ready list */
+        /* 如果监听的事件已经就绪，则直接将其移动到就绪队列当中 */
 	if ((revents & event->events) && !EP_IS_LINKED(&epi->rdllink)) {
+                /* 将epitem添加到ep中的就绪队列 */
 		list_add_tail(&epi->rdllink, &ep->rdllist);
 
 		/* Notify waiting tasks that events are available */
@@ -1045,6 +1071,7 @@ eexit_1:
  * Modify the interest event mask by dropping an event if the new mask
  * has a match in the current file status.
  */
+/* 修改监听的事件，如修改监听事件的struct epoll_event参数等等 */
 static int ep_modify(struct eventpoll *ep, struct epitem *epi, struct epoll_event *event)
 {
 	int pwake = 0;
@@ -1264,8 +1291,12 @@ is_linked:
 	 * Wake up ( if active ) both the eventpoll wait list and the ->poll()
 	 * wait list.
 	 */
+        /* 判断等待队列是否为空，如果此时已经有epoll_wait在等待，
+          * 则唤醒等待的进程 
+          */
 	if (waitqueue_active(&ep->wq))
 		wake_up(&ep->wq);
+        /* 唤醒监视epoll文件描述符的其他epoll文件描述符 */
 	if (waitqueue_active(&ep->poll_wait))
 		pwake++;
 
@@ -1293,7 +1324,7 @@ static int ep_eventpoll_close(struct inode *inode, struct file *file)
 	return 0;
 }
 
-
+/* epoll文件描述符的poll函数 */
 static unsigned int ep_eventpoll_poll(struct file *file, poll_table *wait)
 {
 	unsigned int pollflags = 0;
@@ -1336,7 +1367,7 @@ static int ep_collect_ready_items(struct eventpoll *ep, struct list_head *txlist
 		lnk = lnk->next;
 
 		/* If this file is already in the ready list we exit soon */
-                /* 如果txlink链表不为空 */
+                /* 如果txlink链表为空，也就是没有添加到已经转换的双向链表当中  */
 		if (!EP_IS_LINKED(&epi->txlink)) {
 			/*
 			 * This is initialized in this way so that the default
@@ -1501,7 +1532,7 @@ static int ep_events_transfer(struct eventpoll *ep,
 	return eventcnt;
 }
 
-
+/* 开始读取就绪队列 */
 static int ep_poll(struct eventpoll *ep, struct epoll_event __user *events,
 		   int maxevents, long timeout)
 {

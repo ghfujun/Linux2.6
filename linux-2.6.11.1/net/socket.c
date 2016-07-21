@@ -946,6 +946,7 @@ out:
 }
 
 /* No kernel lock held - perfect */
+/* 网络文件的poll调用 */
 static unsigned int sock_poll(struct file *file, poll_table * wait)
 {
 	struct socket *sock;

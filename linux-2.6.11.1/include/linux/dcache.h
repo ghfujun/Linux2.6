@@ -88,6 +88,7 @@ struct dentry {
 	atomic_t d_count;
 	unsigned int d_flags;		/* protected by d_lock */
 	spinlock_t d_lock;		/* per dentry lock */
+        /* 对应文件的物理结构指针 */
 	struct inode *d_inode;		/* Where the name belongs to - NULL is
 					 * negative */
 	/*

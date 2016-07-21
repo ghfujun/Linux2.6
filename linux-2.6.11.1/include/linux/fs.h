@@ -600,6 +600,7 @@ struct file {
 	void			*f_security;
 
 	/* needed for tty driver, and maybe others */
+        /* 在epoll当中，该指针指向struct eventpoll结构 */
 	void			*private_data;
 
 #ifdef CONFIG_EPOLL
