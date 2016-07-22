@@ -38,6 +38,27 @@ struct exec_domain;
 /*
  * cloning flags:
  */
+/* CLONE_VM表示父进程和子进程共享内存空间；也就是说，任何一个进程在内存中修改， 
+  * 也会影响其他进程，包括进程中执行mmap或munmap操作，也会影响其他进程。
+  * 值得一提的是，fork也是调用clone来创建子进程的，它也不会设置CLONE_VM标记。
+  * 
+  * CLONE_FS表示父进程和子进程共享文件系统信息，包括文件系统根目录、
+  * 当前工作目录和umask。在父进程或子进程中调用chroot，chdir和umask也会影响其他进程。
+  * 
+  * CLONE_FILES表示父进程和子进程共享相同的文件描述符表。在父进程或子进程中打开
+  * 一个新的文件，或者关闭一个文件，或者用fcntl修改相关的文件flag，也会影响其他进程。
+  * 
+  *  CLONE_SIGHAND表示父进程和子进程共享相同的信号处理程序表，即父进程或子进程
+  * 通过sigaction修改信号的处理方式，也会影响其他进程。但是父进程和子进程各种有独立掩码，
+  * 因此一个进程通过sigprocmask来阻塞或不阻塞某个信号，是不会影响其他进程的。
+  * 
+  * CLONE_THREAD用来表示子进程与父进程在同一个线程组（thread group）中。简单的说，
+  * 创建的子进程对于用户空间来说就是创建一个线程。
+  * 
+  * CLONE_SYSVSEM用来表示子进程与父进程共享相同的信号量列表。
+  * 上面说的“子进程”实质就是我们创建的线程，从这些标识也能看出，进程中各个线程之间共享了那些资源。
+*/
+
 #define CSIGNAL		0x000000ff	/* signal mask to be sent at exit */
 #define CLONE_VM	0x00000100	/* set if VM shared between processes */
 #define CLONE_FS	0x00000200	/* set if fs info shared between processes */
@@ -577,7 +598,11 @@ struct task_struct {
 	/* ??? */
 	unsigned long personality;
 	unsigned did_exec:1;
+        /* 线程组中所有的线程使用和该线程组的领头线程，
+          * 也就是组中的第一个轻量级进程，相同的pid
+          */
 	pid_t pid;
+        /* 线程组id ，只有线程组的领头线程的pid成员才会设置为和tgid相同的值 */
 	pid_t tgid;
 	/* 
 	 * pointers to (original) parent process, youngest child, younger sibling,
@@ -621,6 +646,7 @@ struct task_struct {
 #ifdef CONFIG_KEYS
 	struct key *session_keyring;	/* keyring inherited over fork */
 	struct key *process_keyring;	/* keyring private to this process (CLONE_THREAD) */
+        /* 线程私有数据的实现基础 */
 	struct key *thread_keyring;	/* keyring private to this thread */
 #endif
 	int oomkilladj; /* OOM kill score adjustment (bit shift). */

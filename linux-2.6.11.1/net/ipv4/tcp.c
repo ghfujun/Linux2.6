@@ -1067,6 +1067,9 @@ static int tcp_recv_urg(struct sock *sk, long timeo,
  * calculation of whether or not we must ACK for the sake of
  * a window update.
  */
+/* 清理掉sock的读取队列中，已经被读取的copied字节的数据
+  * 同时在该函数最后会向对方发送一个ack确认
+  */ 
 static void cleanup_rbuf(struct sock *sk, int copied)
 {
 	struct tcp_sock *tp = tcp_sk(sk);
@@ -1226,7 +1229,8 @@ int tcp_read_sock(struct sock *sk, read_descriptor_t *desc,
  *	tricks with *seq access order and skb->users are not required.
  *	Probably, code can be easily improved even more.
  */
-
+/* tcp协议层的数据读取函数  
+  */ 
 int tcp_recvmsg(struct kiocb *iocb, struct sock *sk, struct msghdr *msg,
 		size_t len, int nonblock, int flags, int *addr_len)
 {
@@ -1251,6 +1255,7 @@ int tcp_recvmsg(struct kiocb *iocb, struct sock *sk, struct msghdr *msg,
 	timeo = sock_rcvtimeo(sk, nonblock);
 
 	/* Urgent data needs to be handled specially. */
+        /* 如果收到带外数据 ，也就是紧急数据 */
 	if (flags & MSG_OOB)
 		goto recv_urg;
 

@@ -616,6 +616,8 @@ static inline void __skb_append(struct sk_buff *old, struct sk_buff *newsk)
  * the list known..
  */
 extern void	   skb_unlink(struct sk_buff *skb);
+
+/* 将sk_buff从sk_buff_head链表当中删除 */
 static inline void __skb_unlink(struct sk_buff *skb, struct sk_buff_head *list)
 {
 	struct sk_buff *next, *prev;

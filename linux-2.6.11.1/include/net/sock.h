@@ -208,7 +208,7 @@ struct sock {
 	rwlock_t		sk_dst_lock;
 	struct xfrm_policy	*sk_policy[2];
 	atomic_t		sk_rmem_alloc;
-	struct sk_buff_head	sk_receive_queue;
+	struct sk_buff_head	sk_receive_queue;			/* 接收队列 */
 	atomic_t		sk_wmem_alloc;
 	struct sk_buff_head	sk_write_queue;
 	atomic_t		sk_omem_alloc;
@@ -440,6 +440,7 @@ static inline int sk_stream_min_wspace(struct sock *sk)
 	return sk->sk_wmem_queued / 2;
 }
 
+/* 计算sock的写剩余空间 */
 static inline int sk_stream_wspace(struct sock *sk)
 {
 	return sk->sk_sndbuf - sk->sk_wmem_queued;
@@ -1272,6 +1273,8 @@ sock_recv_timestamp(struct msghdr *msg, struct sock *sk, struct sk_buff *skb)
  * This routine must be called with interrupts disabled or with the socket
  * locked so that the sk_buff queue operation is ok.
 */
+
+/* 从sock的sk_buff接收队列中删除一个skb */
 static inline void sk_eat_skb(struct sock *sk, struct sk_buff *skb)
 {
 	__skb_unlink(skb, &sk->sk_receive_queue);

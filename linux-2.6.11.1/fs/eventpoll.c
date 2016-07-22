@@ -907,6 +907,7 @@ static void ep_use_epitem(struct epitem *epi)
  * has finished using the structure. It might lead to freeing the
  * structure itself if the count goes to zero.
  */
+/* 减小epitem的引用计数 */
 static void ep_release_epitem(struct epitem *epi)
 {
 
@@ -1160,6 +1161,7 @@ static void ep_unregister_pollwait(struct eventpoll *ep, struct epitem *epi)
  * Unlink the "struct epitem" from all places it might have been hooked up.
  * This function must be called with write IRQ lock on "ep->lock".
  */
+/* 将epitem从eventpoll的就绪队列中删除 */
 static int ep_unlink(struct eventpoll *ep, struct epitem *epi)
 {
 	int error;
@@ -1452,6 +1454,8 @@ static int ep_send_events(struct eventpoll *ep, struct list_head *txlist,
  * not already linked, links it to the ready list. Same as above, we are holding
  * "sem" so items cannot vanish underneath our nose.
  */
+/*  txlist表示在epoll的时候已经转换的就绪链表 
+  */ 
 static void ep_reinject_items(struct eventpoll *ep, struct list_head *txlist)
 {
 	int ricnt = 0, pwake = 0;
@@ -1464,6 +1468,7 @@ static void ep_reinject_items(struct eventpoll *ep, struct list_head *txlist)
 		epi = list_entry(txlist->next, struct epitem, txlink);
 
 		/* Unlink the current item from the transfer list */
+                /* 把自己从已经转换队列中删除 */
 		EP_LIST_DEL(&epi->txlink);
 
 		/*
@@ -1473,6 +1478,7 @@ static void ep_reinject_items(struct eventpoll *ep, struct list_head *txlist)
 		 * item is set to have an Edge Triggered behaviour, we don't have
 		 * to push it back either.
 		 */
+                /* 如果是水平触发就将该转换的epitem再次push到就绪队列当中 */
 		if (EP_RB_LINKED(&epi->rbn) && !(epi->event.events & EPOLLET) &&
 		    (epi->revents & epi->event.events) && !EP_IS_LINKED(&epi->rdllink)) {
 			list_add_tail(&epi->rdllink, &ep->rdllist);
