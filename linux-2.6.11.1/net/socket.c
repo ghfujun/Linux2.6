@@ -1156,6 +1156,7 @@ static int __sock_create(int family, int type, int protocol, struct socket **res
 		goto out;
 	}
 
+        /* 设置socket的类型 */
 	sock->type  = type;
 
 	/*

@@ -244,6 +244,7 @@ static int inet_create(struct socket *sock, int protocol)
 	/* Look for the requested type/protocol pair. */
 	answer = NULL;
 	rcu_read_lock();
+        /* 首先通过类型来hash出对应的struct inet_protosw链表 */
 	list_for_each_rcu(p, &inetsw[sock->type]) {
 		answer = list_entry(p, struct inet_protosw, list);
 

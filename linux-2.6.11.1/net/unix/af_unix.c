@@ -569,7 +569,7 @@ out:
 	return sk;
 }
 
-/* unix域套接字的创建 */
+/* unix域套接字的创建，unix和inet协议域的创建不一样  */
 static int unix_create(struct socket *sock, int protocol)
 {
 	if (protocol && protocol != PF_UNIX)
