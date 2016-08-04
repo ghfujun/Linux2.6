@@ -100,7 +100,8 @@ DEFINE_RWLOCK(notifier_lock);
  *
  *	Currently always returns zero.
  */
- 
+
+/* 注册通知链，按照优先级进行排列  */
 int notifier_chain_register(struct notifier_block **list, struct notifier_block *n)
 {
 	write_lock(&notifier_lock);
@@ -162,7 +163,8 @@ EXPORT_SYMBOL(notifier_chain_unregister);
  *	Otherwise, the return value is the return value
  *	of the last notifier function called.
  */
- 
+
+/* 依次触发通知链中的所有事件，但并没有删除通知链 */
 int notifier_call_chain(struct notifier_block **n, unsigned long val, void *v)
 {
 	int ret=NOTIFY_DONE;

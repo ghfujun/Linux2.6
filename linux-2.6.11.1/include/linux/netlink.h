@@ -22,14 +22,30 @@
 
 #define MAX_LINKS 32		
 
+/* netlink消息地址结构 */
 struct sockaddr_nl
 {
 	sa_family_t	nl_family;	/* AF_NETLINK	*/
+        /* 当前没有被使用，总要设置为0 */
 	unsigned short	nl_pad;		/* zero		*/
+        /* 绑定时用于指定绑定着的进程号，发送消息时，用于指定接收
+          * 进程号，如果希望内核处理多播消息，就把该字段设置为0，否则 
+          * 设置为处理消息的进程id，传递给bind函数的地址的nl_pid字段应该设置为 
+          * 本进程的进程id，这相当于netlink的本地地址，但是字段nl_pid则可以设置为其他 
+          * 的值，如pthread_self() << 16 | getpid(); 
+          * nl_pid实际上未必就是进程的id，它只是用于区分不同接收者或发送者的一个标识， 
+          * 用户可以根据自己的需要来设置字段  
+          */
 	__u32		nl_pid;		/* process pid	*/
+        /* 绑定时用于指定绑定者所要键入的多播组，这样绑定者就可以接收多播消息
+          * 发送消息时可以用于指定多播组，这样就可以将消息发送给多个接收者。 
+          * 这里的nl_groups为32位的无符号整数，所以可以指定32个多播组，每个进程可以加入 
+          * 多个多播组，因为多播组是通过“或“操作，如果设置为0，表示调用者不加入任何多播组 
+          */
        	__u32		nl_groups;	/* multicast groups mask */
 };
 
+/* netlink消息头部 */
 struct nlmsghdr
 {
 	__u32		nlmsg_len;	/* Length of message including header */
@@ -137,7 +153,7 @@ int netlink_sendskb(struct sock *sk, struct sk_buff *skb, int protocol);
 #define NLMSG_GOODORDER 0
 #define NLMSG_GOODSIZE (SKB_MAX_ORDER(0, NLMSG_GOODORDER))
 
-
+/* netlink的回调结构 */
 struct netlink_callback
 {
 	struct sk_buff	*skb;
@@ -148,6 +164,7 @@ struct netlink_callback
 	long		args[4];
 };
 
+/* netlink的通知 */
 struct netlink_notify
 {
 	int pid;

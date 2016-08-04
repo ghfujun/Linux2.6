@@ -11,11 +11,12 @@
 #define _LINUX_NOTIFIER_H
 #include <linux/errno.h>
 
+/* 通知链的元素结构 */
 struct notifier_block
 {
 	int (*notifier_call)(struct notifier_block *self, unsigned long, void *);
 	struct notifier_block *next;
-	int priority;
+	int priority;       /* 通知链的优先级，按照优先级从高到低排序 */
 };
 
 

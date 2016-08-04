@@ -217,6 +217,8 @@ static inline void list_replace_rcu(struct list_head *old, struct list_head *new
  * list_del_init - deletes entry from list and reinitialize it.
  * @entry: the element to delete from the list.
  */
+/* 将entry从链表中删除，并且将删除的节点给初始化为NULL  
+  */
 static inline void list_del_init(struct list_head *entry)
 {
 	__list_del(entry->prev, entry->next);
@@ -496,7 +498,10 @@ struct hlist_head {
 	struct hlist_node *first;
 };
 
-/* hash节点 */
+/* hash节点，这种节点和纯粹的单链表节点唯一的差别就是
+  * 有一个指向上一个节点的指针的指针，删除的时候，直接传入一个 
+  * 参数即可，对尾部节点的访问不好。 
+  */
 struct hlist_node {
 	struct hlist_node *next, **pprev;
 };
@@ -516,6 +521,7 @@ static inline int hlist_empty(const struct hlist_head *h)
 	return !h->first;
 }
 
+/* 将自己从链表中删除，注意这种链表和list_head的区别和使用场景 */
 static inline void __hlist_del(struct hlist_node *n)
 {
 	struct hlist_node *next = n->next;
@@ -557,6 +563,7 @@ static inline void hlist_del_rcu(struct hlist_node *n)
 	n->pprev = LIST_POISON2;
 }
 
+/* 将n从链表当中删除 */
 static inline void hlist_del_init(struct hlist_node *n)
 {
 	if (n->pprev)  {
@@ -565,6 +572,7 @@ static inline void hlist_del_init(struct hlist_node *n)
 	}
 }
 
+/* 向链表中添加一个节点，注意是添加到链表的头部 */
 static inline void hlist_add_head(struct hlist_node *n, struct hlist_head *h)
 {
 	struct hlist_node *first = h->first;
@@ -592,6 +600,8 @@ static inline void hlist_add_head(struct hlist_node *n, struct hlist_head *h)
  * problems on Alpha CPUs.  Regardless of the type of CPU, the
  * list-traversal primitive must be guarded by rcu_read_lock().
  */
+
+/* 通过RCU机制的添加 */
 static inline void hlist_add_head_rcu(struct hlist_node *n,
 					struct hlist_head *h)
 {
@@ -605,6 +615,7 @@ static inline void hlist_add_head_rcu(struct hlist_node *n,
 }
 
 /* next must be != NULL */
+/* 将n插入到next的前面 */
 static inline void hlist_add_before(struct hlist_node *n,
 					struct hlist_node *next)
 {
@@ -614,6 +625,7 @@ static inline void hlist_add_before(struct hlist_node *n,
 	*(n->pprev) = n;
 }
 
+/* */
 static inline void hlist_add_after(struct hlist_node *n,
 					struct hlist_node *next)
 {
@@ -625,6 +637,7 @@ static inline void hlist_add_after(struct hlist_node *n,
 		next->next->pprev  = &next->next;
 }
 
+/* 获取hlist_node所在节点的结构体的首地址 */
 #define hlist_entry(ptr, type, member) container_of(ptr,type,member)
 
 #define hlist_for_each(pos, head) \

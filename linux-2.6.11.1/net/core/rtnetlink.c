@@ -613,6 +613,7 @@ static inline int rtnetlink_rcv_skb(struct sk_buff *skb)
  *	  exclusive lock failed.
  */
 
+/* netlink路由链的消息接收函数 */
 static void rtnetlink_rcv(struct sock *sk, int len)
 {
 	do {
@@ -678,6 +679,7 @@ static struct notifier_block rtnetlink_dev_notifier = {
 	.notifier_call	= rtnetlink_event,
 };
 
+/* netlink路由链的初始化 */
 void __init rtnetlink_init(void)
 {
 	int i;

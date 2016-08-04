@@ -102,6 +102,7 @@ struct sock;
   *	This is the minimal network layer representation of sockets, the header
   *	for struct sock and struct tcp_tw_bucket.
   */
+/* sock的通用变量结构 */
 struct sock_common {
 	unsigned short		skc_family;
 	volatile unsigned char	skc_state;              /* sock的状态 */
@@ -179,7 +180,10 @@ struct sock_common {
   *	@sk_destruct - called at sock freeing time, i.e. when all refcnt == 0
  */
 
-/* sock结构 */
+/* sock结构，注意不同的传输层协议都以
+  * C语言中的内存对齐来实现，如inet协议族的inet_sock，
+  * tcp协议的为tcp_sock，udp协议的udp_sock
+  */
 struct sock {
 	/*
 	 * Now struct tcp_tw_bucket also uses sock_common, so please just
@@ -243,13 +247,13 @@ struct sock {
 	__u32			sk_priority;
 	unsigned short		sk_type;
 	unsigned char		sk_localroute;
-	unsigned char		sk_protocol;
+	unsigned char		sk_protocol;    /* 协议标记 */
 	struct ucred		sk_peercred;
 	int			sk_rcvlowat;
 	long			sk_rcvtimeo;
 	long			sk_sndtimeo;
 	struct sk_filter      	*sk_filter;
-	void			*sk_protinfo;
+	void			*sk_protinfo;       /* 在netlink协议中对应struct netlink_opt结构 */
 	kmem_cache_t		*sk_slab;
 	struct timer_list	sk_timer;
 	struct timeval		sk_stamp;
@@ -564,7 +568,7 @@ struct proto {
 	int			max_header;
 
 	kmem_cache_t		*slab;             /* 协议对应的高速缓存 */
-	int			slab_obj_size;
+	int			slab_obj_size;          /* 结构的大小 */
 
 	struct module		*owner;
 

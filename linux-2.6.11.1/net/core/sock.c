@@ -1356,6 +1356,7 @@ void sk_common_release(struct sock *sk)
 
 EXPORT_SYMBOL(sk_common_release);
 
+/* 分配协议的slab分配池 */
 int sk_alloc_slab(struct proto *prot, char *name)
 {
 	prot->slab = kmem_cache_create(name,

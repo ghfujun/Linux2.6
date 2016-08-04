@@ -75,8 +75,9 @@ struct netlink_opt
 
 #define nlk_sk(__sk) ((struct netlink_opt *)(__sk)->sk_protinfo)
 
+/* netlink进程pid的hash结构 */
 struct nl_pid_hash {
-	struct hlist_head *table;
+	struct hlist_head *table;   /* 通过pid来hash出一个对应的hash链表的链首 */
 	unsigned long rehash_time;
 
 	unsigned int mask;
@@ -89,23 +90,30 @@ struct nl_pid_hash {
 };
 
 struct netlink_table {
-	struct nl_pid_hash hash;
-	struct hlist_head mc_list;
-	unsigned int nl_nonroot;
+	struct nl_pid_hash hash;  /* 根据pid进行hash的netlink sock链表，相当于客户端链表 */
+	struct hlist_head mc_list;  /* 多播的sock链表 */
+	unsigned int nl_nonroot;  /* 监听者标记 */
 };
 
+/* 内核中所有的netlink套接字都存储在一个全局的hash表当中，
+  * 不同的sock先是根据协议类型来hash出对应的索引
+  */
 static struct netlink_table *nl_table;
 
+/* 定义等待队列 */
 static DECLARE_WAIT_QUEUE_HEAD(nl_table_wait);
 
 static int netlink_dump(struct sock *sk);
 static void netlink_destroy_callback(struct netlink_callback *cb);
 
+/* 定义nl_table的锁 */
 static DEFINE_RWLOCK(nl_table_lock);
+/* 初始化为0 */
 static atomic_t nl_table_users = ATOMIC_INIT(0);
 
 static struct notifier_block *netlink_chain;
 
+/* 通过hash函数来获取pid对应的hash链首 */
 static struct hlist_head *nl_pid_hashfn(struct nl_pid_hash *hash, u32 pid)
 {
 	return &hash->table[jhash_1word(pid, hash->rnd) & hash->mask];
@@ -132,13 +140,15 @@ static void netlink_sock_destruct(struct sock *sk)
  * this, _but_ remember, it adds useless work on UP machines.
  */
 
+/* 函数返回时表示nl_table_users的值为0 */
 static void netlink_table_grab(void)
 {
 	write_lock_bh(&nl_table_lock);
 
 	if (atomic_read(&nl_table_users)) {
+                /* 形成当前进程的等待队列 */
 		DECLARE_WAITQUEUE(wait, current);
-
+                /* 添加到等待队列中 */
 		add_wait_queue_exclusive(&nl_table_wait, &wait);
 		for(;;) {
 			set_current_state(TASK_UNINTERRUPTIBLE);
@@ -150,6 +160,7 @@ static void netlink_table_grab(void)
 		}
 
 		__set_current_state(TASK_RUNNING);
+                /* 从队列中移除 */
 		remove_wait_queue(&nl_table_wait, &wait);
 	}
 }
@@ -160,6 +171,7 @@ static __inline__ void netlink_table_ungrab(void)
 	wake_up(&nl_table_wait);
 }
 
+/* 增加引用计数 */
 static __inline__ void
 netlink_lock_table(void)
 {
@@ -170,6 +182,7 @@ netlink_lock_table(void)
 	read_unlock(&nl_table_lock);
 }
 
+/* 减小引用计数，当nl_table_users为0时，唤醒等待在nl_table_wait上的等待队列 */
 static __inline__ void
 netlink_unlock_table(void)
 {
@@ -274,6 +287,7 @@ static inline int nl_pid_hash_dilute(struct nl_pid_hash *hash, int len)
 
 static struct proto_ops netlink_ops;
 
+/* 指定进程接收消息 */
 static int netlink_insert(struct sock *sk, u32 pid)
 {
 	struct nl_pid_hash *hash = &nl_table[sk->sk_protocol].hash;
@@ -324,6 +338,7 @@ static void netlink_remove(struct sock *sk)
 	netlink_table_ungrab();
 }
 
+/* 创建netlink协议族套接字 */
 static int netlink_create(struct socket *sock, int protocol)
 {
 	struct sock *sk;
@@ -331,6 +346,7 @@ static int netlink_create(struct socket *sock, int protocol)
 
 	sock->state = SS_UNCONNECTED;
 
+        /* netlink只支持SOCK_RAW和SOCK_DGRAM类型 */
 	if (sock->type != SOCK_RAW && sock->type != SOCK_DGRAM)
 		return -ESOCKTNOSUPPORT;
 
@@ -351,6 +367,7 @@ static int netlink_create(struct socket *sock, int protocol)
 		sk_free(sk);
 		return -ENOMEM;
 	}
+        /* 对数据清0 */
 	memset(nlk, 0, sizeof(*nlk));
 
 	spin_lock_init(&nlk->cb_lock);
@@ -442,6 +459,7 @@ static inline int netlink_capable(struct socket *sock, unsigned int flag)
 	       capable(CAP_NET_ADMIN);
 } 
 
+/* 绑定netlink协议族套接字 */
 static int netlink_bind(struct socket *sock, struct sockaddr *addr, int addr_len)
 {
 	struct sock *sk = sock->sk;
@@ -1031,7 +1049,7 @@ static void netlink_data_ready(struct sock *sk, int len)
  *	complete set of kernel non-blocking support for message
  *	queueing.
  */
-
+/* 内核空间创建netlink套接字函数 */
 struct sock *
 netlink_kernel_create(int unit, void (*input)(struct sock *sk, int len))
 {
@@ -1347,6 +1365,7 @@ static struct file_operations netlink_seq_fops = {
 
 #endif
 
+/* 注册到netlink通知链 */
 int netlink_register_notifier(struct notifier_block *nb)
 {
 	return notifier_chain_register(&netlink_chain, nb);
@@ -1386,6 +1405,7 @@ static struct net_proto_family netlink_family_ops = {
 
 extern void netlink_skb_parms_too_large(void);
 
+/* netlink协议的初始化 */
 static int __init netlink_proto_init(void)
 {
 	struct sk_buff *dummy_skb;
@@ -1396,6 +1416,7 @@ static int __init netlink_proto_init(void)
 	if (sizeof(struct netlink_skb_parms) > sizeof(dummy_skb->cb))
 		netlink_skb_parms_too_large();
 
+        /* 分配足够数量的结构体 */
 	nl_table = kmalloc(sizeof(*nl_table) * MAX_LINKS, GFP_KERNEL);
 	if (!nl_table) {
 enomem:
