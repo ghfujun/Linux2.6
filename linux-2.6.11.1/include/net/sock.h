@@ -334,6 +334,7 @@ static __inline__ int __sk_del_node_init(struct sock *sk)
    modifications.
  */
 
+/* 增加sk的引用计数 */
 static inline void sock_hold(struct sock *sk)
 {
 	atomic_inc(&sk->sk_refcnt);
@@ -342,6 +343,7 @@ static inline void sock_hold(struct sock *sk)
 /* Ungrab socket in the context, which assumes that socket refcnt
    cannot hit zero, f.e. it is true in context of any socketcall.
  */
+/* 释放sock的引用计数 */
 static inline void __sock_put(struct sock *sk)
 {
 	atomic_dec(&sk->sk_refcnt);
@@ -370,11 +372,13 @@ static __inline__ void sk_add_node(struct sock *sk, struct hlist_head *list)
 	__sk_add_node(sk, list);
 }
 
+/* 删除操作 */
 static __inline__ void __sk_del_bind_node(struct sock *sk)
 {
 	__hlist_del(&sk->sk_bind_node);
 }
 
+/* 添加操作 */
 static __inline__ void sk_add_bind_node(struct sock *sk,
 					struct hlist_head *list)
 {
@@ -636,11 +640,12 @@ struct sock_iocb {
 	struct list_head	list;
 
 	int			flags;
-	int			size;
-	struct socket		*sock;
+	int			size;                /* 发送数据的长度 */
+	struct socket		*sock;          /* 记录发送消息的socket */
 	struct sock		*sk;
 	struct scm_cookie	*scm;
-	struct msghdr		*msg, async_msg;
+	struct msghdr		*msg,    /* 记录发送的消息 */
+                                        async_msg;
 	struct iovec		async_iov;
 	struct kiocb		*kiocb;
 };

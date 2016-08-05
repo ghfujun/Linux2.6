@@ -37,7 +37,7 @@ struct sockaddr_nl
           * 用户可以根据自己的需要来设置字段  
           */
 	__u32		nl_pid;		/* process pid	*/
-        /* 绑定时用于指定绑定者所要键入的多播组，这样绑定者就可以接收多播消息
+        /* 绑定时用于指定绑定者所要进入的多播组，这样绑定者就可以接收多播消息
           * 发送消息时可以用于指定多播组，这样就可以将消息发送给多个接收者。 
           * 这里的nl_groups为32位的无符号整数，所以可以指定32个多播组，每个进程可以加入 
           * 多个多播组，因为多播组是通过“或“操作，如果设置为0，表示调用者不加入任何多播组 
@@ -121,10 +121,10 @@ enum {
 struct netlink_skb_parms
 {
 	struct ucred		creds;		/* Skb credentials	*/
-	__u32			pid;
-	__u32			groups;
-	__u32			dst_pid;
-	__u32			dst_groups;
+	__u32			pid;	          /* 自己的进程pid */
+	__u32			groups;		/* 自己所在的组播组 */
+	__u32			dst_pid;	/* 消息的目的进程id*/
+	__u32			dst_groups;   /* 消息的目的组播组 */
 	kernel_cap_t		eff_cap;
 };
 

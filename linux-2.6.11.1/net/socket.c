@@ -564,6 +564,11 @@ static inline int __sock_sendmsg(struct kiocb *iocb, struct socket *sock,
 	return sock->ops->sendmsg(iocb, sock, msg, size);
 }
 
+/* sock表示发送消息的sock套接字，
+  * sock表示发送数据的套接字 
+  * msg表示要发送的消息 
+  * size表示发送数据长度  
+  */
 int sock_sendmsg(struct socket *sock, struct msghdr *msg, size_t size)
 {
 	struct kiocb iocb;
@@ -1530,6 +1535,7 @@ asmlinkage long sys_getpeername(int fd, struct sockaddr __user *usockaddr, int _
  *	the protocol.
  */
 
+/* 发送一个数据报到一个指定的地址 */
 asmlinkage long sys_sendto(int fd, void __user * buff, size_t len, unsigned flags,
 			   struct sockaddr __user *addr, int addr_len)
 {
@@ -1555,6 +1561,7 @@ asmlinkage long sys_sendto(int fd, void __user * buff, size_t len, unsigned flag
 		err = move_addr_to_kernel(addr, addr_len, address);
 		if (err < 0)
 			goto out_put;
+                /* 设置地址和地址长度 */
 		msg.msg_name=address;
 		msg.msg_namelen=addr_len;
 	}

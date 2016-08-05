@@ -103,7 +103,8 @@ int memcpy_toiovec(struct iovec *iov, unsigned char *kdata, int len)
  *
  *	Note: this modifies the original iovec.
  */
- 
+
+/* 将用户空间需要发送的数据拷贝到内核空间中的skb中 */
 int memcpy_fromiovec(unsigned char *kdata, struct iovec *iov, int len)
 {
 	while (len > 0) {

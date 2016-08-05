@@ -61,8 +61,8 @@
 
 struct netlink_opt
 {
-	u32			pid;
-	unsigned int		groups;
+	u32			pid;                /* 接收消息的进程pid */
+	unsigned int		groups;       /* 记录套接字在哪个多播组 */
 	u32			dst_pid;
 	unsigned int		dst_groups;
 	unsigned long		state;
@@ -287,7 +287,11 @@ static inline int nl_pid_hash_dilute(struct nl_pid_hash *hash, int len)
 
 static struct proto_ops netlink_ops;
 
-/* 指定进程接收消息 */
+/* 指定进程接收消息，
+  * sk表示绑定的套接字 
+  * pid为接收消息的进程pid 
+  * 绑定成功之后，就是将sk变量hash到nl_table当中  
+  */
 static int netlink_insert(struct sock *sk, u32 pid)
 {
 	struct nl_pid_hash *hash = &nl_table[sk->sk_protocol].hash;
@@ -305,6 +309,7 @@ static int netlink_insert(struct sock *sk, u32 pid)
 			break;
 		len++;
 	}
+        /* 就是整个链表扫描完毕还是没找到 */
 	if (node)
 		goto err;
 
@@ -320,6 +325,7 @@ static int netlink_insert(struct sock *sk, u32 pid)
 		head = nl_pid_hashfn(hash, pid);
 	hash->entries++;
 	nlk_sk(sk)->pid = pid;
+        /* 将sk添加到head对应的链表当中 */
 	sk_add_node(sk, head);
 	err = 0;
 
@@ -485,14 +491,17 @@ static int netlink_bind(struct socket *sock, struct sockaddr *addr, int addr_len
 			return err;
 	}
 
+        /* 如果不进入任何多播组就直接返回 */
 	if (!nladdr->nl_groups && !nlk->groups)
 		return 0;
 
 	netlink_table_grab();
 	if (nlk->groups && !nladdr->nl_groups)
 		__sk_del_bind_node(sk);
+        /* 将自己添加到多播组当中 */
 	else if (!nlk->groups && nladdr->nl_groups)
 		sk_add_bind_node(sk, &nl_table[sk->sk_protocol].mc_list);
+        /* 设置多播组 */
 	nlk->groups = nladdr->nl_groups;
 	netlink_table_ungrab();
 
@@ -682,8 +691,10 @@ static inline struct sk_buff *netlink_trim(struct sk_buff *skb, int allocation)
 {
 	int delta;
 
+        /* 让skb变成孤儿，也就是断开skb和sock之间的关系 */
 	skb_orphan(skb);
 
+        /* 如果数据占用一大半，则直接返回  */
 	delta = skb->end - skb->tail;
 	if (delta * 2 < skb->truesize)
 		return skb;
@@ -746,14 +757,15 @@ static __inline__ int netlink_broadcast_deliver(struct sock *sk, struct sk_buff 
 }
 
 struct netlink_broadcast_data {
-	struct sock *exclude_sk;
-	u32 pid;
-	u32 group;
+	struct sock *exclude_sk;         /* 排除向exclude_sk发送 */
+	u32 pid;                                /* 目的进程号 */
+	u32 group;                            /* 目的进程组 */
 	int failure;
 	int congested;
 	int delivered;
-	int allocation;
-	struct sk_buff *skb, *skb2;
+	int allocation;                       /* 内存分配策略 */
+	struct sk_buff *skb,               /* 需要被发送的skb */
+                            *skb2;
 };
 
 static inline int do_one_broadcast(struct sock *sk,
@@ -799,6 +811,12 @@ out:
 	return 0;
 }
 
+/* ssk表示发送消息的sock
+  * skb表示需要发送的skb 
+  * pid表示目的进程号 
+  * group表示目的组播组 
+  * allocation表示内存分配策略 
+  */
 int netlink_broadcast(struct sock *ssk, struct sk_buff *skb, u32 pid,
 		      u32 group, int allocation)
 {
@@ -894,12 +912,16 @@ static inline void netlink_rcv_wake(struct sock *sk)
 		wake_up_interruptible(&nlk->wait);
 }
 
+/* netlink的sendto函数的具体实现，
+  * len表示发送数据长度 
+  */
 static int netlink_sendmsg(struct kiocb *kiocb, struct socket *sock,
 			   struct msghdr *msg, size_t len)
 {
 	struct sock_iocb *siocb = kiocb_to_siocb(kiocb);
 	struct sock *sk = sock->sk;
 	struct netlink_opt *nlk = nlk_sk(sk);
+        /* 设置接收消息的地址 */
 	struct sockaddr_nl *addr=msg->msg_name;
 	u32 dst_pid;
 	u32 dst_groups;
@@ -919,6 +941,7 @@ static int netlink_sendmsg(struct kiocb *kiocb, struct socket *sock,
 	if (msg->msg_namelen) {
 		if (addr->nl_family != AF_NETLINK)
 			return -EINVAL;
+                /* 设置目的pid和组播组 */
 		dst_pid = addr->nl_pid;
 		dst_groups = addr->nl_groups;
 		if (dst_groups && !netlink_capable(sock, NL_NONROOT_SEND))
@@ -928,6 +951,7 @@ static int netlink_sendmsg(struct kiocb *kiocb, struct socket *sock,
 		dst_groups = nlk->dst_groups;
 	}
 
+        /* 如果发送的进程pid为0，则进行自动绑定  */
 	if (!nlk->pid) {
 		err = netlink_autobind(sock);
 		if (err)
@@ -942,6 +966,7 @@ static int netlink_sendmsg(struct kiocb *kiocb, struct socket *sock,
 	if (skb==NULL)
 		goto out;
 
+        /* 初始化struct netlink_skb_parms */
 	NETLINK_CB(skb).pid	= nlk->pid;
 	NETLINK_CB(skb).groups	= nlk->groups;
 	NETLINK_CB(skb).dst_pid = dst_pid;
@@ -955,17 +980,20 @@ static int netlink_sendmsg(struct kiocb *kiocb, struct socket *sock,
 	 */
 
 	err = -EFAULT;
+        /* 拷贝需要发送的数据 */
 	if (memcpy_fromiovec(skb_put(skb,len), msg->msg_iov, len)) {
 		kfree_skb(skb);
 		goto out;
 	}
 
+        /* 做安全性判断 */
 	err = security_netlink_send(sk, skb);
 	if (err) {
 		kfree_skb(skb);
 		goto out;
 	}
 
+        /* 如果需要把消息发送到几个组播组 */
 	if (dst_groups) {
 		atomic_inc(&skb->users);
 		netlink_broadcast(sk, skb, dst_pid, dst_groups, GFP_KERNEL);

@@ -51,9 +51,9 @@ struct linger {
  */
  
 struct msghdr {
-	void	*	msg_name;	/* Socket name			*/
-	int		msg_namelen;	/* Length of name		*/
-	struct iovec *	msg_iov;	/* Data blocks			*/
+	void	*	msg_name;	/* Socket name			*/    /* socket地址 */
+	int		msg_namelen;	/* Length of name		*/  /* 地址长度 */
+	struct iovec *	msg_iov;	/* Data blocks			*/      /* 需要发送的数据 */
 	__kernel_size_t	msg_iovlen;	/* Number of blocks		*/
 	void 	*	msg_control;	/* Per protocol magic (eg BSD file descriptor passing) */
 	__kernel_size_t	msg_controllen;	/* Length of cmsg list */

@@ -17,9 +17,12 @@
 /* A word of warning: Our uio structure will clash with the C library one (which is now obsolete). Remove the C
    library one from sys/uio.h if you have a very old library set */
 
+/* 发送的数据结构 */
 struct iovec
 {
+       /* 发送数据地址 */
 	void __user *iov_base;	/* BSD uses caddr_t (1003.1g requires void *) */
+        /* 发送数据长度 */
 	__kernel_size_t iov_len; /* Must be size_t (1003.1g) */
 };
 

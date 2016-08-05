@@ -194,8 +194,8 @@ struct sk_buff {
 	struct sk_buff		*next;
 	struct sk_buff		*prev;
 
-	struct sk_buff_head	*list;
-	struct sock		*sk;
+	struct sk_buff_head	*list;      /* 指向sk_buff链表对应的链表头 */
+	struct sock		*sk;              /* 指向对应的sock结构 */
 	struct timeval		stamp;
 	struct net_device	*dev;
 	struct net_device	*input_dev;
@@ -231,6 +231,7 @@ struct sk_buff {
 	 * want to keep them across layers you have to do a skb_clone()
 	 * first. This is owned by whoever has the skb queued ATM.
 	 */
+        /* 在netlink协议中指向struct netlink_skb_parms结构 */
 	char			cb[40];
 
 	unsigned int		len,
@@ -275,8 +276,8 @@ struct sk_buff {
 
 	/* These elements must be at the end, see alloc_skb() for details.  */
 	unsigned int		truesize;
-	atomic_t		users;
-	unsigned char		*head,
+	atomic_t		users;      /* skb的引用计数 */
+	unsigned char		*head,    /* 这几个变量在alloc_sk中被设置 */
 				*data,
 				*tail,
 				*end;

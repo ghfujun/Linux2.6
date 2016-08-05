@@ -43,6 +43,7 @@ struct kioctx;
 #define kiocbIsKicked(iocb)	test_bit(KIF_KICKED, &(iocb)->ki_flags)
 #define kiocbIsCancelled(iocb)	test_bit(KIF_CANCELLED, &(iocb)->ki_flags)
 
+/* 内核IO回调结构 */
 struct kiocb {
 	struct list_head	ki_run_list;
 	long			ki_flags;
@@ -74,7 +75,7 @@ struct kiocb {
 	long			ki_kicked; 	/* just for testing */
 	long			ki_queued; 	/* just for testing */
 
-	void			*private;
+	void			*private;	/* 在socket当中记录的是struct sock_iocb  */
 };
 
 #define is_sync_kiocb(iocb)	((iocb)->ki_key == KIOCB_SYNC_KEY)
