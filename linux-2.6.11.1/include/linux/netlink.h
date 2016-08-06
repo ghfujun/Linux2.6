@@ -15,7 +15,7 @@
 #define NETLINK_ARPD		8
 #define NETLINK_AUDIT		9	/* auditing */
 #define NETLINK_ROUTE6		11	/* af_inet6 route comm channel */
-#define NETLINK_IP6_FW		13
+#define NETLINK_IP6_FW		13       /* ipv6的防火墙 */
 #define NETLINK_DNRTMSG		14	/* DECnet routing messages */
 #define NETLINK_KOBJECT_UEVENT	15	/* Kernel messages to userspace */
 #define NETLINK_TAPBASE		16	/* 16 to 31 are ethertap */
@@ -29,7 +29,7 @@ struct sockaddr_nl
         /* 当前没有被使用，总要设置为0 */
 	unsigned short	nl_pad;		/* zero		*/
         /* 绑定时用于指定绑定着的进程号，发送消息时，用于指定接收
-          * 进程号，如果希望内核处理多播消息，就把该字段设置为0，否则 
+          * 进程号，如果希望内核处理消息，就把该字段设置为0，否则 
           * 设置为处理消息的进程id，传递给bind函数的地址的nl_pid字段应该设置为 
           * 本进程的进程id，这相当于netlink的本地地址，但是字段nl_pid则可以设置为其他 
           * 的值，如pthread_self() << 16 | getpid(); 

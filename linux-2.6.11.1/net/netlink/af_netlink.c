@@ -70,7 +70,7 @@ struct netlink_opt
 	wait_queue_head_t	wait;
 	struct netlink_callback	*cb;
 	spinlock_t		cb_lock;
-	void			(*data_ready)(struct sock *sk, int bytes);
+	void			(*data_ready)(struct sock *sk, int bytes);  /* netlink数据准备好的回调函数 */
 };
 
 #define nlk_sk(__sk) ((struct netlink_opt *)(__sk)->sk_protinfo)
@@ -339,6 +339,7 @@ static void netlink_remove(struct sock *sk)
 	netlink_table_grab();
 	nl_table[sk->sk_protocol].hash.entries--;
 	sk_del_node_init(sk);
+        /* 如果自己在组播里面，则从相应的组播里面删除 */
 	if (nlk_sk(sk)->groups)
 		__sk_del_bind_node(sk);
 	netlink_table_ungrab();
@@ -384,6 +385,7 @@ static int netlink_create(struct socket *sock, int protocol)
 	return 0;
 }
 
+/* netlink套接字释放 */
 static int netlink_release(struct socket *sock)
 {
 	struct sock *sk = sock->sk;
@@ -413,6 +415,9 @@ static int netlink_release(struct socket *sock)
 
 	skb_queue_purge(&sk->sk_write_queue);
 
+        /* 如果套接字有想其他进程发送消息或其他组播组发送消息，
+          * 则在释放的时候需要告诉其他进程或组播组 
+          */
 	if (nlk->pid && !nlk->groups) {
 		struct netlink_notify n = {
 						.protocol = sk->sk_protocol,
@@ -737,6 +742,7 @@ retry:
 	return netlink_sendskb(sk, skb, ssk->sk_protocol);
 }
 
+/* 将skb广播到对应的sk当中 */
 static __inline__ int netlink_broadcast_deliver(struct sock *sk, struct sk_buff *skb)
 {
 	struct netlink_opt *nlk = nlk_sk(sk);
@@ -765,7 +771,7 @@ struct netlink_broadcast_data {
 	int delivered;
 	int allocation;                       /* 内存分配策略 */
 	struct sk_buff *skb,               /* 需要被发送的skb */
-                            *skb2;
+                            *skb2;               /* 表示clone的skb,然后发送到不同的socket */
 };
 
 static inline int do_one_broadcast(struct sock *sk,
@@ -774,6 +780,7 @@ static inline int do_one_broadcast(struct sock *sk,
 	struct netlink_opt *nlk = nlk_sk(sk);
 	int val;
 
+        /* 如果是自己的话就直接返回 */
 	if (p->exclude_sk == sk)
 		goto out;
 
@@ -1004,6 +1011,7 @@ out:
 	return err;
 }
 
+/* netlink协议族的消息接收函数 */
 static int netlink_recvmsg(struct kiocb *kiocb, struct socket *sock,
 			   struct msghdr *msg, size_t len,
 			   int flags)
@@ -1063,6 +1071,7 @@ out:
 	return err ? : copied;
 }
 
+/* 调用数据准备好回调函数，同时唤醒等待进程 */
 static void netlink_data_ready(struct sock *sk, int len)
 {
 	struct netlink_opt *nlk = nlk_sk(sk);
@@ -1077,7 +1086,9 @@ static void netlink_data_ready(struct sock *sk, int len)
  *	complete set of kernel non-blocking support for message
  *	queueing.
  */
-/* 内核空间创建netlink套接字函数 */
+/* 内核空间创建netlink套接字函数，input表示内核套接字的接收回调函数
+  * unit表示协议类型 
+  */
 struct sock *
 netlink_kernel_create(int unit, void (*input)(struct sock *sk, int len))
 {
@@ -1090,6 +1101,7 @@ netlink_kernel_create(int unit, void (*input)(struct sock *sk, int len))
 	if (unit<0 || unit>=MAX_LINKS)
 		return NULL;
 
+        /* 内核创建套接字 */
 	if (sock_create_lite(PF_NETLINK, SOCK_DGRAM, unit, &sock))
 		return NULL;
 
@@ -1102,6 +1114,7 @@ netlink_kernel_create(int unit, void (*input)(struct sock *sk, int len))
 	if (input)
 		nlk_sk(sk)->data_ready = input;
 
+        /* 注意此时创建创建的套接字的pid为0  */
 	if (netlink_insert(sk, 0)) {
 		sock_release(sock);
 		return NULL;
@@ -1486,6 +1499,7 @@ enomem:
 	proc_net_fops_create("netlink", 0, &netlink_seq_fops);
 #endif
 	/* The netlink device handler may be needed early. */ 
+        /* 路由套接字初始化 */
 	rtnetlink_init();
 	return 0;
 }

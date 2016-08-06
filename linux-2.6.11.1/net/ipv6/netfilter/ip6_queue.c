@@ -657,6 +657,9 @@ ipq_get_info(char *buffer, char **start, off_t offset, int length)
 	return len;
 }
 
+/* 1表示初始化，
+  * 0表示反初始化
+  */
 static int
 init_or_cleanup(int init)
 {

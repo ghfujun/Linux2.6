@@ -601,6 +601,11 @@ int kernel_sendmsg(struct socket *sock, struct msghdr *msg,
 	return result;
 }
 
+/* 接收消息
+  * sock为接收消息的socket 
+  * msg为消息结构 
+  * size表示接收消息的长度 
+  */
 static inline int __sock_recvmsg(struct kiocb *iocb, struct socket *sock, 
 				 struct msghdr *msg, size_t size, int flags)
 {
@@ -928,6 +933,9 @@ static long sock_ioctl(struct file *file, unsigned cmd, unsigned long arg)
 	return err;
 }
 
+/* 内核创建一个netlink的套接字，
+  * 创建好的socket放在res中作为输出参数
+  */
 int sock_create_lite(int family, int type, int protocol, struct socket **res)
 {
 	int err;
@@ -1591,6 +1599,7 @@ asmlinkage long sys_send(int fd, void __user * buff, size_t len, unsigned flags)
  *	sender address from kernel to user space.
  */
 
+/* 从地址接收消息的系统调用 */
 asmlinkage long sys_recvfrom(int fd, void __user * ubuf, size_t size, unsigned flags,
 			     struct sockaddr __user *addr, int __user *addr_len)
 {

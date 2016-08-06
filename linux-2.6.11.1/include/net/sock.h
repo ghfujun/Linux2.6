@@ -109,7 +109,7 @@ struct sock_common {
 	unsigned char		skc_reuse;
 	int			skc_bound_dev_if;
 	struct hlist_node	skc_node;
-	struct hlist_node	skc_bind_node;
+	struct hlist_node	skc_bind_node;       /* netlink组播链表 */
 	atomic_t		skc_refcnt;      /* sock的引用计数 */
 };
 
@@ -250,7 +250,7 @@ struct sock {
 	unsigned char		sk_protocol;    /* 协议标记 */
 	struct ucred		sk_peercred;
 	int			sk_rcvlowat;
-	long			sk_rcvtimeo;
+	long			sk_rcvtimeo;	    /* 在接收数据的时候等多久超时 */
 	long			sk_sndtimeo;
 	struct sk_filter      	*sk_filter;
 	void			*sk_protinfo;       /* 在netlink协议中对应struct netlink_opt结构 */
@@ -349,6 +349,7 @@ static inline void __sock_put(struct sock *sk)
 	atomic_dec(&sk->sk_refcnt);
 }
 
+/* 将自己从skc_node链表中移除 */
 static __inline__ int sk_del_node_init(struct sock *sk)
 {
 	int rc = __sk_del_node_init(sk);
@@ -1071,6 +1072,7 @@ static inline void skb_set_owner_w(struct sk_buff *skb, struct sock *sk)
 	atomic_add(skb->truesize, &sk->sk_wmem_alloc);
 }
 
+/* 设置skb和sock之间的关系 */
 static inline void skb_set_owner_r(struct sk_buff *skb, struct sock *sk)
 {
 	skb->sk = sk;
@@ -1236,6 +1238,7 @@ static inline int gfp_any(void)
 	return in_softirq() ? GFP_ATOMIC : GFP_KERNEL;
 }
 
+/* 如果是非阻塞的，则不等待，如果是阻塞，则等待一个时间 */
 static inline long sock_rcvtimeo(const struct sock *sk, int noblock)
 {
 	return noblock ? 0 : sk->sk_rcvtimeo;

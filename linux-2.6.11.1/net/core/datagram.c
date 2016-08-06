@@ -100,6 +100,7 @@ static int wait_for_packet(struct sock *sk, int *err, long *timeo_p)
 	error = 0;
 	*timeo_p = schedule_timeout(*timeo_p);
 out:
+	/* 把自己从等待队列中删除 */
 	finish_wait(sk->sk_sleep, &wait);
 	return error;
 interrupted:
@@ -142,6 +143,8 @@ out_noerr:
  *	quite explicitly by POSIX 1003.1g, don't change them without having
  *	the standard around please.
  */
+/* 从sk中接收数据报  
+  */
 struct sk_buff *skb_recv_datagram(struct sock *sk, unsigned flags,
 				  int noblock, int *err)
 {
@@ -177,11 +180,13 @@ struct sk_buff *skb_recv_datagram(struct sock *sk, unsigned flags,
 		} else
 			skb = skb_dequeue(&sk->sk_receive_queue);
 
+		/* 如果从接收队列中获取到数据报则直接返回 */
 		if (skb)
 			return skb;
 
 		/* User doesn't want to wait */
 		error = -EAGAIN;
+		/* 如果是非阻塞，则直接返回 */
 		if (!timeo)
 			goto no_packet;
 
@@ -208,6 +213,7 @@ void skb_free_datagram(struct sock *sk, struct sk_buff *skb)
  *
  *	Note: the iovec is modified during the copy.
  */
+/* 将skb中的数据拷贝到iovec中指向的用户空间地址 */
 int skb_copy_datagram_iovec(const struct sk_buff *skb, int offset,
 			    struct iovec *to, int len)
 {

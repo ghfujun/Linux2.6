@@ -666,6 +666,7 @@ init_or_cleanup(int init)
 		goto cleanup;
 
 	netlink_register_notifier(&ipq_nl_notifier);
+        /* 创建防火墙的netlink套接字 */
 	ipqnl = netlink_kernel_create(NETLINK_FIREWALL, ipq_rcv_sk);
 	if (ipqnl == NULL) {
 		printk(KERN_ERR "ip_queue: failed to create netlink socket\n");
@@ -710,6 +711,7 @@ cleanup_netlink_notifier:
 	return status;
 }
 
+/* 在ip层就建立起防火墙套接字 */
 static int __init init(void)
 {
 	

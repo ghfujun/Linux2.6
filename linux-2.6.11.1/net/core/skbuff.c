@@ -1279,6 +1279,7 @@ struct sk_buff *skb_dequeue_tail(struct sk_buff_head *list)
  *	the list and one reference dropped. This function takes the list
  *	lock and is atomic with respect to other list locking functions.
  */
+/* 将链表中的所有元素释放 */
 void skb_queue_purge(struct sk_buff_head *list)
 {
 	struct sk_buff *skb;

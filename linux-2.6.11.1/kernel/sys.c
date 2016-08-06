@@ -164,7 +164,9 @@ EXPORT_SYMBOL(notifier_chain_unregister);
  *	of the last notifier function called.
  */
 
-/* 依次触发通知链中的所有事件，但并没有删除通知链 */
+/* 依次触发通知链中的所有事件，但并没有删除通知链，
+  * 将n作为数据传递给通知链中的所有节点
+  */
 int notifier_call_chain(struct notifier_block **n, unsigned long val, void *v)
 {
 	int ret=NOTIFY_DONE;

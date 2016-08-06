@@ -52,6 +52,7 @@ void filp_dtor(void * objp, struct kmem_cache_s *cachep, unsigned long dflags)
 	spin_unlock_irqrestore(&filp_count_lock, flags);
 }
 
+/* 释放file结构内存 */
 static inline void file_free(struct file *f)
 {
 	kmem_cache_free(filp_cachep, f);
@@ -117,6 +118,7 @@ EXPORT_SYMBOL(fput);
 /* __fput is called from task context when aio completion releases the last
  * last use of a struct file *.  Do not use otherwise.
  */
+/* 释放文件结构 */
 void fastcall __fput(struct file *file)
 {
 	struct dentry *dentry = file->f_dentry;
@@ -142,6 +144,7 @@ void fastcall __fput(struct file *file)
 	file_kill(file);
 	file->f_dentry = NULL;
 	file->f_vfsmnt = NULL;
+	/* 释放内存 */
 	file_free(file);
 	dput(dentry);
 	mntput(mnt);
