@@ -59,6 +59,7 @@ static DEFINE_RWLOCK(queue_lock);
 static int peer_pid;
 static unsigned int copy_range;
 static unsigned int queue_total;
+/* 创建的防火墙套接字 */
 static struct sock *ipqnl;
 static LIST_HEAD(queue_list);
 static DECLARE_MUTEX(ipqnl_sem);
@@ -554,6 +555,7 @@ ipq_rcv_sk(struct sock *sk, int len)
 	} while (ipqnl && ipqnl->sk_receive_queue.qlen);
 }
 
+/* 设备通知链事件处理回调 */
 static int
 ipq_rcv_dev_event(struct notifier_block *this,
                   unsigned long event, void *ptr)
@@ -570,12 +572,14 @@ static struct notifier_block ipq_dev_notifier = {
 	.notifier_call	= ipq_rcv_dev_event,
 };
 
+/* 防火墙的通知事件处理函数 */
 static int
 ipq_rcv_nl_event(struct notifier_block *this,
                  unsigned long event, void *ptr)
 {
 	struct netlink_notify *n = ptr;
 
+	/* 对防火墙收到的数据包进行条件判断处理 */
 	if (event == NETLINK_URELEASE &&
 	    n->protocol == NETLINK_FIREWALL && n->pid) {
 		write_lock_bh(&queue_lock);

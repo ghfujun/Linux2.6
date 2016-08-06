@@ -386,6 +386,11 @@ static __inline__ void sk_add_bind_node(struct sock *sk,
 	hlist_add_head(&sk->sk_bind_node, list);
 }
 
+/* __sk表示取出的数据结构指针
+  * node表示链表指针 
+  * list表示链表头部 
+  * sk_node表示在__sk结构体中的成员 
+  */
 #define sk_for_each(__sk, node, list) \
 	hlist_for_each_entry(__sk, node, list, sk_node)
 #define sk_for_each_from(__sk, node) \

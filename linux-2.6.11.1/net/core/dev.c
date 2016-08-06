@@ -954,12 +954,14 @@ int dev_close(struct net_device *dev)
  *	view of the network device list.
  */
 
+/* 注册网络设备通知链 */
 int register_netdevice_notifier(struct notifier_block *nb)
 {
 	struct net_device *dev;
 	int err;
 
 	rtnl_lock();
+        /* 注册设备通知链，如果成功则通知其他所有设备 */
 	err = notifier_chain_register(&netdev_chain, nb);
 	if (!err) {
 		for (dev = dev_base; dev; dev = dev->next) {

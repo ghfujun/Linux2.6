@@ -798,7 +798,7 @@ __rta_reserve(struct sk_buff *skb, int attrtype, int attrlen)
 
 extern void rtmsg_ifinfo(int type, struct net_device *dev, unsigned change);
 
-extern struct semaphore rtnl_sem;
+extern struct semaphore rtnl_sem;     /* netlink路由信号量 */
 
 #define rtnl_shlock()		down(&rtnl_sem)
 #define rtnl_shlock_nowait()	down_trylock(&rtnl_sem)

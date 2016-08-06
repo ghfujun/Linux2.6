@@ -92,7 +92,7 @@ struct nl_pid_hash {
 struct netlink_table {
 	struct nl_pid_hash hash;  /* 根据pid进行hash的netlink sock链表，相当于客户端链表 */
 	struct hlist_head mc_list;  /* 多播的sock链表 */
-	unsigned int nl_nonroot;  /* 监听者标记 */
+	unsigned int nl_nonroot;  /* 监听者标记 ，表示是否需要root权限 */
 };
 
 /* 内核中所有的netlink套接字都存储在一个全局的hash表当中，
@@ -296,7 +296,7 @@ static int netlink_insert(struct sock *sk, u32 pid)
 {
 	struct nl_pid_hash *hash = &nl_table[sk->sk_protocol].hash;
 	struct hlist_head *head;
-	int err = -EADDRINUSE;
+	int err = -EADDRINUSE;        /* 首先初始化已经被使用 */
 	struct sock *osk;
 	struct hlist_node *node;
 	int len;
@@ -304,12 +304,13 @@ static int netlink_insert(struct sock *sk, u32 pid)
 	netlink_table_grab();
 	head = nl_pid_hashfn(hash, pid);
 	len = 0;
+        /* 如果同一个进程创建多个netlink套接字 */
 	sk_for_each(osk, node, head) {
 		if (nlk_sk(osk)->pid == pid)
 			break;
 		len++;
 	}
-        /* 就是整个链表扫描完毕还是没找到 */
+        /* 如果在链表当中找到了同一个进程pid */
 	if (node)
 		goto err;
 
@@ -324,6 +325,8 @@ static int netlink_insert(struct sock *sk, u32 pid)
 	if (len && nl_pid_hash_dilute(hash, len))
 		head = nl_pid_hashfn(hash, pid);
 	hash->entries++;
+        /* 插入之后，就设置插入的pid，如果指定了就是用指定的，
+          如果设置为0，则查找一个合适的 */
 	nlk_sk(sk)->pid = pid;
         /* 将sk添加到head对应的链表当中 */
 	sk_add_node(sk, head);
@@ -444,7 +447,13 @@ static int netlink_autobind(struct socket *sock)
 retry:
 	cond_resched();
 	netlink_table_grab();
+        /* 根据pid来hash出链表头部，注意此时的pid为当前进程的pid */
 	head = nl_pid_hashfn(hash, pid);
+        /* 注意如果很多进程在发送消息的时候，将自己的pid设置为0
+          * 那么在自动绑定的时候，则会通过pid来hash的链表中进行查找， 
+          * 如果pid已经被绑定，则继续寻找一个没有被绑定的，如果没有被绑定 
+          * 则直接使用  
+          */
 	sk_for_each(osk, node, head) {
 		if (nlk_sk(osk)->pid == pid) {
 			/* Bind collision, search negative pid values. */
@@ -457,9 +466,11 @@ retry:
 	}
 	netlink_table_ungrab();
 
+        /* 然后将找到的合适pid插入到全局hash表当中 */
 	err = netlink_insert(sk, pid);
 	if (err == -EADDRINUSE)
 		goto retry;
+        /* 自动绑定之后，不进入任何组播组 */
 	nlk_sk(sk)->groups = 0;
 	return 0;
 }
@@ -482,13 +493,20 @@ static int netlink_bind(struct socket *sock, struct sockaddr *addr, int addr_len
 		return -EINVAL;
 
 	/* Only superuser is allowed to listen multicasts */
+        /* 如果要加入多播组，则需要管理员权限 */
 	if (nladdr->nl_groups && !netlink_capable(sock, NL_NONROOT_RECV))
 		return -EPERM;
 
+        /* 在调用netlink的socket系统调用后，nlk的所有数据都被清0，
+          * 如果多次绑定，且设置的进程pid不一样，则返回无效错误 
+          */
 	if (nlk->pid) {
 		if (nladdr->nl_pid != nlk->pid)
 			return -EINVAL;
 	} else {
+                /* 第一次绑定，如果绑定的进程pid大于0，则直接插入全局列表
+                  * 否则自动绑定 
+                  */
 		err = nladdr->nl_pid ?
 			netlink_insert(sk, nladdr->nl_pid) :
 			netlink_autobind(sock);
@@ -501,6 +519,7 @@ static int netlink_bind(struct socket *sock, struct sockaddr *addr, int addr_len
 		return 0;
 
 	netlink_table_grab();
+        /* 如果再次绑定的时候不进入多播组，则将自己从多播组中删除 */
 	if (nlk->groups && !nladdr->nl_groups)
 		__sk_del_bind_node(sk);
         /* 将自己添加到多播组当中 */
@@ -774,6 +793,9 @@ struct netlink_broadcast_data {
                             *skb2;               /* 表示clone的skb,然后发送到不同的socket */
 };
 
+/* sk表示要接收消息的socket，其中有条件判断，是否可以将消息发送给它
+  * p表示多播发送的信息 
+  */
 static inline int do_one_broadcast(struct sock *sk,
 				   struct netlink_broadcast_data *p)
 {
@@ -784,6 +806,9 @@ static inline int do_one_broadcast(struct sock *sk,
 	if (p->exclude_sk == sk)
 		goto out;
 
+        /* 如果和目的进程的pid相同，则多播就不需要发送，
+          * 如果和目的多播组不在一组，则不发送数据包
+          */
 	if (nlk->pid == p->pid || !(nlk->groups & p->group))
 		goto out;
 
@@ -833,6 +858,7 @@ int netlink_broadcast(struct sock *ssk, struct sk_buff *skb, u32 pid,
 
 	skb = netlink_trim(skb, allocation);
 
+        /* 设置排除sock */
 	info.exclude_sk = ssk;
 	info.pid = pid;
 	info.group = group;
@@ -847,6 +873,9 @@ int netlink_broadcast(struct sock *ssk, struct sk_buff *skb, u32 pid,
 
 	netlink_lock_table();
 
+        /* 扫描本地套接字所在的多播组链表，注意第三个参数表示所有
+          * 和发送套接字协议相同的加入多播组的socket
+          */
 	sk_for_each_bound(sk, node, &nl_table[ssk->sk_protocol].mc_list)
 		do_one_broadcast(sk, &info);
 
@@ -921,6 +950,8 @@ static inline void netlink_rcv_wake(struct sock *sk)
 
 /* netlink的sendto函数的具体实现，
   * len表示发送数据长度 
+  * sock表示发送数据套接字 
+  * msg表示发送的数据和目的地址 
   */
 static int netlink_sendmsg(struct kiocb *kiocb, struct socket *sock,
 			   struct msghdr *msg, size_t len)
@@ -987,7 +1018,7 @@ static int netlink_sendmsg(struct kiocb *kiocb, struct socket *sock,
 	 */
 
 	err = -EFAULT;
-        /* 拷贝需要发送的数据 */
+        /* 拷贝需要发送的数据，并生成一个skb */
 	if (memcpy_fromiovec(skb_put(skb,len), msg->msg_iov, len)) {
 		kfree_skb(skb);
 		goto out;
@@ -1087,7 +1118,7 @@ static void netlink_data_ready(struct sock *sk, int len)
  *	queueing.
  */
 /* 内核空间创建netlink套接字函数，input表示内核套接字的接收回调函数
-  * unit表示协议类型 
+  * unit表示协议 
   */
 struct sock *
 netlink_kernel_create(int unit, void (*input)(struct sock *sk, int len))

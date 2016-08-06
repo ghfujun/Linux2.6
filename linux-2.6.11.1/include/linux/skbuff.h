@@ -112,13 +112,14 @@ struct nf_bridge_info {
 
 #endif
 
+/* skb双向链表的头部 */
 struct sk_buff_head {
 	/* These two members must be first. */
 	struct sk_buff	*next;
 	struct sk_buff	*prev;
 
-	__u32		qlen;
-	spinlock_t	lock;
+	__u32		qlen;         /* 队列长度 */
+	spinlock_t	lock;        /* 操作队列的锁 */
 };
 
 struct sk_buff;
