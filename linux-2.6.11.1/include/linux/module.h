@@ -214,9 +214,9 @@ struct module_ref
 
 enum module_state
 {
-	MODULE_STATE_LIVE,
-	MODULE_STATE_COMING,
-	MODULE_STATE_GOING,
+	MODULE_STATE_LIVE, /* 模块当前正在使用中 */
+	MODULE_STATE_COMING, /* 模块当前正在被加载 */
+	MODULE_STATE_GOING,   /* 模块正在被卸载 */
 };
 
 /* Similar stuff for section attributes. */

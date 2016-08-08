@@ -27,6 +27,8 @@ extern long do_no_restart_syscall(struct restart_block *parm);
  * - pass TIF_xxxx constants to these functions
  */
 
+/* 整个文件都是对thread_info的flag字段的操作 */
+
 static inline void set_thread_flag(int flag)
 {
 	set_bit(flag,&current_thread_info()->flags);

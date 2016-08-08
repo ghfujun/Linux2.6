@@ -54,9 +54,9 @@ struct linux_binprm{
  */
 struct linux_binfmt {
 	struct linux_binfmt * next;
-	struct module *module;
+	struct module *module;         /* 对应模块 */
 	int (*load_binary)(struct linux_binprm *, struct  pt_regs * regs);
-	int (*load_shlib)(struct file *);
+	int (*load_shlib)(struct file *);                /* 加载共享库 */
 	int (*core_dump)(long signr, struct pt_regs * regs, struct file * file);
 	unsigned long min_coredump;	/* minimal dump size */
 };

@@ -107,6 +107,7 @@ fail:
 
 EXPORT_SYMBOL(get_empty_filp);
 
+/* 释放文件，如果file的引用计数为0，则真正的释放内存 */
 void fastcall fput(struct file *file)
 {
 	if (atomic_dec_and_test(&file->f_count))

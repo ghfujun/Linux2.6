@@ -522,6 +522,7 @@ static void wait_for_zero_refcount(struct module *mod)
 	down(&module_mutex);
 }
 
+/* 删除内核模块 */
 asmlinkage long
 sys_delete_module(const char __user *name_user, unsigned int flags)
 {
@@ -1390,6 +1391,8 @@ static inline void add_kallsyms(struct module *mod,
 
 /* Allocate and load the module: note that size of section 0 is always
    zero, and we rely on this for optional sections. */
+
+/* 加载内核模块 */
 static struct module *load_module(void __user *umod,
 				  unsigned long len,
 				  const char __user *uargs)
@@ -1733,6 +1736,7 @@ static struct module *load_module(void __user *umod,
 }
 
 /* This is where the real work happens */
+/* 完成模块的全部初始化 */
 asmlinkage long
 sys_init_module(void __user *umod,
 		unsigned long len,
