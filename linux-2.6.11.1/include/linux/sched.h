@@ -166,7 +166,9 @@ struct sched_param {
  * _adding_ to the beginning of the run-queue has
  * a separate lock).
  */
+/* 进程任务链表锁*/
 extern rwlock_t tasklist_lock;
+/* 内存链表锁 */
 extern spinlock_t mmlist_lock;
 
 /* task_struct的一个重新定义 */
@@ -597,6 +599,7 @@ struct task_struct {
 	int pdeath_signal;  /*  The signal sent when the parent dies  */
 	/* ??? */
 	unsigned long personality;
+        /* 是否通过exec函数族来更换的进程 */
 	unsigned did_exec:1;
         /* 线程组中所有的线程使用和该线程组的领头线程，
           * 也就是组中的第一个轻量级进程，相同的pid

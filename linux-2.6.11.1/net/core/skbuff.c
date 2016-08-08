@@ -325,7 +325,8 @@ void __kfree_skb(struct sk_buff *skb)
  */
 
 struct sk_buff *skb_clone(struct sk_buff *skb, int gfp_mask)
-{
+{  
+        /* 重新分配一个skb */
 	struct sk_buff *n = kmem_cache_alloc(skbuff_head_cache, gfp_mask);
 
 	if (!n) 
@@ -333,6 +334,7 @@ struct sk_buff *skb_clone(struct sk_buff *skb, int gfp_mask)
 
 #define C(x) n->x = skb->x
 
+        /* 初始化skb的链表和sock属主 */
 	n->next = n->prev = NULL;
 	n->list = NULL;
 	n->sk = NULL;
@@ -401,6 +403,7 @@ struct sk_buff *skb_clone(struct sk_buff *skb, int gfp_mask)
 	return n;
 }
 
+/* 拷贝skb的头部 */
 static void copy_skb_header(struct sk_buff *new, const struct sk_buff *old)
 {
 	/*

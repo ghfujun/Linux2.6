@@ -77,6 +77,7 @@ static inline int test_ti_thread_flag(struct thread_info *ti, int flag)
 	return test_bit(flag,&ti->flags);
 }
 
+/* 设置进程中中断处理过程当中返回时，重新调用调度程序 */
 static inline void set_need_resched(void)
 {
 	set_thread_flag(TIF_NEED_RESCHED);

@@ -190,6 +190,8 @@ netlink_unlock_table(void)
 		wake_up(&nl_table_wait);
 }
 
+
+/* 根据协议和进程pid来获取全局hash表中的sock结构 */
 static __inline__ struct sock *netlink_lookup(int protocol, u32 pid)
 {
 	struct nl_pid_hash *hash = &nl_table[protocol].hash;
@@ -593,12 +595,14 @@ static void netlink_overrun(struct sock *sk)
 	}
 }
 
+/* 返回目的进程对应的sock结构 */
 static struct sock *netlink_getsockbypid(struct sock *ssk, u32 pid)
 {
 	int protocol = ssk->sk_protocol;
 	struct sock *sock;
 	struct netlink_opt *nlk;
 
+        /* 寻找目的进程的sock */
 	sock = netlink_lookup(protocol, pid);
 	if (!sock)
 		return ERR_PTR(-ECONNREFUSED);
@@ -680,10 +684,12 @@ int netlink_attachskb(struct sock *sk, struct sk_buff *skb, int nonblock, long t
 		}
 		return 1;
 	}
+        /* 直接将skb的属主设置为接收skb的sock */
 	skb_set_owner_r(skb, sk);
 	return 0;
 }
 
+/* 将skb添加到接收sock的接收队列当中 */
 int netlink_sendskb(struct sock *sk, struct sk_buff *skb, int protocol)
 {
 	struct netlink_opt *nlk;
@@ -737,6 +743,11 @@ static inline struct sk_buff *netlink_trim(struct sk_buff *skb, int allocation)
 	return skb;
 }
 
+/* 想目的进程发送消息，
+  * ssk表示发送消息的sock 
+  * skb表示发送数据包 
+  * pid表示目的进程  
+  */
 int netlink_unicast(struct sock *ssk, struct sk_buff *skb, u32 pid, int nonblock)
 {
 	struct sock *sk;
@@ -761,7 +772,9 @@ retry:
 	return netlink_sendskb(sk, skb, ssk->sk_protocol);
 }
 
-/* 将skb广播到对应的sk当中 */
+/* 将skb广播到对应的sk当中，
+  * 返回0，1表示正常
+  */
 static __inline__ int netlink_broadcast_deliver(struct sock *sk, struct sk_buff *skb)
 {
 	struct netlink_opt *nlk = nlk_sk(sk);
@@ -812,6 +825,7 @@ static inline int do_one_broadcast(struct sock *sk,
 	if (nlk->pid == p->pid || !(nlk->groups & p->group))
 		goto out;
 
+        /*  如果有一个失败，则停止并发送错误报告 */
 	if (p->failure) {
 		netlink_overrun(sk);
 		goto out;
@@ -826,6 +840,7 @@ static inline int do_one_broadcast(struct sock *sk,
 			atomic_inc(&p->skb->users);
 		}
 	}
+        /* 如果拷贝的skb失败，则这是错误标记 */
 	if (p->skb2 == NULL) {
 		netlink_overrun(sk);
 		/* Clone failed. Notify ALL listeners. */
@@ -835,6 +850,7 @@ static inline int do_one_broadcast(struct sock *sk,
 	} else {
 		p->congested |= val;
 		p->delivered = 1;
+                /* 在skb2正确广播之后，skb2就要重新设置为null */
 		p->skb2 = NULL;
 	}
 	sock_put(sk);

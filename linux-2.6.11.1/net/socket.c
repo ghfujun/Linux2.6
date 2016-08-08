@@ -523,7 +523,8 @@ struct file_operations bad_sock_fops = {
  *	callback, and the inode is then released if the socket is bound to
  *	an inode not a file. 
  */
- 
+
+/* 释放一个套接字 */
 void sock_release(struct socket *sock)
 {
 	if (sock->ops) {
@@ -978,6 +979,7 @@ static int sock_mmap(struct file * file, struct vm_area_struct * vma)
 	return sock->ops->mmap(file, sock, vma);
 }
 
+/* 关闭套接字 */
 int sock_close(struct inode *inode, struct file *filp)
 {
 	/*

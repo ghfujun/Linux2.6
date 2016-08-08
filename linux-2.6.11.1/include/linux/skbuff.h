@@ -240,7 +240,7 @@ struct sk_buff {
 				mac_len,
 				csum;
 	unsigned char		local_df,
-				cloned,
+				cloned,                     /* 标记是不是通过skb_clone产生的skb */
 				pkt_type,
 				ip_summed;
 	__u32			priority;

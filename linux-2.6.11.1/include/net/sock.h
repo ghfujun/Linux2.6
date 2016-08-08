@@ -202,6 +202,7 @@ struct sock {
 	unsigned char		sk_use_write_queue;
 	unsigned char		sk_userlocks;
 	socket_lock_t		sk_lock;
+	/* sock的接收缓存大小，也就是读缓存空间最大不能超过该变量 */
 	int			sk_rcvbuf;
         /* 等待操作socket的进程队列，当有数据时会唤醒改队列中的所有进程，
           * 并执行等待的回调函数，如在epoll中，当socket可以读写时，此时会调用 
