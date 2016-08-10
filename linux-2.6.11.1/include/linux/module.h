@@ -32,10 +32,11 @@
 
 #define MODULE_NAME_LEN (64 - sizeof(unsigned long))
 
+/* 内核导出符号结构 */
 struct kernel_symbol
 {
-	unsigned long value;
-	const char *name;
+	unsigned long value;			/* 符号在内存中的地址 */
+	const char *name;			/* 该符号的名称 */
 };
 
 struct modversion_info
@@ -60,6 +61,7 @@ struct module_kobject
 };
 
 /* These are either module local, or the kernel's dummy ones. */
+/* 内核的初始化和退出函数，要么本地模块提供，要么使用系统自带 */
 extern int init_module(void);
 extern void cleanup_module(void);
 
@@ -209,7 +211,7 @@ void *__symbol_get_gpl(const char *symbol);
 
 struct module_ref
 {
-	local_t count;
+	local_t count;			/* 模块的引用计数 */
 } ____cacheline_aligned;
 
 enum module_state
@@ -291,13 +293,13 @@ struct module
 
 #ifdef CONFIG_MODULE_UNLOAD
 	/* Reference counts */
-	struct module_ref ref[NR_CPUS];
+	struct module_ref ref[NR_CPUS];			/* 模块在不同CPU上的引用计数 */
 
 	/* What modules depend on me? */
 	struct list_head modules_which_use_me;
 
 	/* Who is waiting for us to be unloaded */
-	struct task_struct *waiter;
+	struct task_struct *waiter;				/* 等待使用模块的进程队列 */
 
 	/* Destruction function. */
 	void (*exit)(void);
@@ -324,6 +326,7 @@ struct module
 /* FIXME: It'd be nice to isolate modules during init, too, so they
    aren't used before they (may) fail.  But presently too much code
    (IDE & SCSI) require entry into the module during init.*/
+/* 判断模块是否被卸载 */
 static inline int module_is_live(struct module *mod)
 {
 	return mod->state != MODULE_STATE_GOING;
@@ -366,6 +369,9 @@ static inline void __module_get(struct module *module)
 	}
 }
 
+/* 判断模块是否活动，并增加模块的引用计数，
+  * 正确返回1 ，否则返回0 
+  */
 static inline int try_module_get(struct module *module)
 {
 	int ret = 1;
@@ -381,6 +387,7 @@ static inline int try_module_get(struct module *module)
 	return ret;
 }
 
+/* 减少模块的引用计数 */
 static inline void module_put(struct module *module)
 {
 	if (module) {

@@ -187,12 +187,14 @@ void __init parse_early_param(void);
  function. */
 
 /* Each module must use one module_init(), or one no_module_init */
+/* 所有的模块初始化函数都被别名为init_module函数 */
 #define module_init(initfn)					\
 	static inline initcall_t __inittest(void)		\
 	{ return initfn; }					\
 	int init_module(void) __attribute__((alias(#initfn)));
 
 /* This is only required if you want to be unloadable. */
+/* 模块退出函数也是取了别名 */
 #define module_exit(exitfn)					\
 	static inline exitcall_t __exittest(void)		\
 	{ return exitfn; }					\

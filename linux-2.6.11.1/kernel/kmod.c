@@ -79,6 +79,7 @@ int request_module(const char *fmt, ...)
 	static int kmod_loop_msg;
 
 	va_start(args, fmt);
+	/* 最终将module的名称存放在module_name变量中 */
 	ret = vsnprintf(module_name, MODULE_NAME_LEN, fmt, args);
 	va_end(args);
 	if (ret >= MODULE_NAME_LEN)

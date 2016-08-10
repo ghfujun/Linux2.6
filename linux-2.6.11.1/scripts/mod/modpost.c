@@ -520,6 +520,7 @@ buf_write(struct buffer *buf, const char *s, int len)
 
 /* Header for the generated file */
 
+/* linux内核模块开发时，自动添加的模块头部 */
 void
 add_header(struct buffer *b, struct module *mod)
 {
@@ -532,7 +533,7 @@ add_header(struct buffer *b, struct module *mod)
 	buf_printf(b, "#undef unix\n"); /* We have a module called "unix" */
 	buf_printf(b, "struct module __this_module\n");
 	buf_printf(b, "__attribute__((section(\".gnu.linkonce.this_module\"))) = {\n");
-	buf_printf(b, " .name = __stringify(KBUILD_MODNAME),\n");
+	buf_printf(b, " .name = __stringify(KBUILD_MODNAME),\n");    /* KBUILD_MODNAME是kbuild在编译时自动生成  */
 	if (mod->has_init)
 		buf_printf(b, " .init = init_module,\n");
 	if (mod->has_cleanup)
@@ -739,6 +740,7 @@ write_dump(const char *fname)
 	write_if_changed(&buf, fname);
 }
 
+/* modpost程序生成模块的*.mod.c文件 */
 int
 main(int argc, char **argv)
 {

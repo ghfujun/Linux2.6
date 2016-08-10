@@ -1179,6 +1179,7 @@ static int __sock_create(int family, int type, int protocol, struct socket **res
 	 * module, so we have to bump that loadable module refcnt first.
 	 */
 	err = -EAFNOSUPPORT;
+        /* 增加相应模块的引用计数 */
 	if (!try_module_get(net_families[family]->owner))
 		goto out_release;
 
@@ -1205,6 +1206,7 @@ out:
 	net_family_read_unlock();
 	return err;
 out_module_put:
+        /* 减少模块计数 */
 	module_put(net_families[family]->owner);
 out_release:
 	sock_release(sock);
@@ -1213,11 +1215,13 @@ out_release:
 
 int sock_create(int family, int type, int protocol, struct socket **res)
 {
+        /* 最后一个参数表示是用户空间发起的系统调用来创建套接字 */
 	return __sock_create(family, type, protocol, res, 0);
 }
 
 int sock_create_kern(int family, int type, int protocol, struct socket **res)
 {
+        /* 内核空间创建套接字 */
 	return __sock_create(family, type, protocol, res, 1);
 }
 

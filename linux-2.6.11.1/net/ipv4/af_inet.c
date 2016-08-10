@@ -1184,8 +1184,13 @@ static int __init ipv4_proc_init(void)
 }
 #endif /* CONFIG_PROC_FS */
 
+/* 给协议名称取了个别名 */
 MODULE_ALIAS_NETPROTO(PF_INET);
 
+/* 注意通过EXPORT_SYMBOL宏导出的函数符号，
+  * 在其他模块是可以调用的，并且导入的函数不能是static的， 
+  * 如果没有被导出的函数，一般使用static关键字 
+  */
 EXPORT_SYMBOL(inet_accept);
 EXPORT_SYMBOL(inet_bind);
 EXPORT_SYMBOL(inet_dgram_connect);
