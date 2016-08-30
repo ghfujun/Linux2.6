@@ -264,6 +264,7 @@ typedef struct elf32_hdr{
   Elf32_Half	e_shstrndx;
 } Elf32_Ehdr;
 
+/* elf64位可执行文件的头部 */
 typedef struct elf64_hdr {
   unsigned char	e_ident[16];		/* ELF "magic number" */
   Elf64_Half e_type;

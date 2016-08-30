@@ -57,9 +57,11 @@ static DEFINE_SPINLOCK(modlist_lock);
 
 /* List of modules, protected by module_mutex AND modlist_lock */
 static DECLARE_MUTEX(module_mutex);
+/* 内核中所有模块的链表 */
 static LIST_HEAD(modules);
 
 static DECLARE_MUTEX(notify_mutex);
+/* 模块的通知链，如注册模块，反注册模块 */
 static struct notifier_block * module_notify_list;
 
 int register_module_notifier(struct notifier_block * nb)
@@ -83,6 +85,7 @@ int unregister_module_notifier(struct notifier_block * nb)
 EXPORT_SYMBOL(unregister_module_notifier);
 
 /* We require a truly strong try_module_get() */
+/* 强制增加模块的引用计数 */
 static inline int strong_try_module_get(struct module *mod)
 {
 	if (mod && mod->state == MODULE_STATE_COMING)
@@ -118,6 +121,7 @@ static unsigned int find_sec(Elf_Ehdr *hdr,
 }
 
 /* Provided by the linker */
+/* 这些变量都由连接器提供，所以在代码当中找不到定义 */
 extern const struct kernel_symbol __start___ksymtab[];
 extern const struct kernel_symbol __stop___ksymtab[];
 extern const struct kernel_symbol __start___ksymtab_gpl[];
@@ -132,6 +136,10 @@ extern const unsigned long __start___kcrctab_gpl[];
 #endif
 
 /* Find a symbol, return value, crc and module which owns it */
+/* 从内核当中查找还有符号名称为name的内核模块
+  * 特别在多个模块之间有依赖关系时，一个模块调用其他模块当中的函数 
+  * 则需要查找这个函数所对应的模块指针 
+  */
 static unsigned long __find_symbol(const char *name,
 				   struct module **owner,
 				   const unsigned long **crc,
@@ -197,6 +205,7 @@ static unsigned long find_local_symbol(Elf_Shdr *sechdrs,
 }
 
 /* Search for module by name: must hold module_mutex. */
+/* 查找名称为name的内核模块 */
 static struct module *find_module(const char *name)
 {
 	struct module *mod;
@@ -371,6 +380,9 @@ static inline void percpu_modcopy(void *pcpudst, const void *src,
 
 #ifdef CONFIG_MODULE_UNLOAD
 /* Init the unload section of the module. */
+/* 设置当前模块在对应CPU中的引用计数为1，
+  * 相当于给模块的卸载做准备 
+  */
 static void module_unload_init(struct module *mod)
 {
 	unsigned int i;
@@ -392,6 +404,9 @@ struct module_use
 };
 
 /* Does a already use b? */
+/* 判断a模块是否使用b模块
+  * 返回1表示使用，反之则不适用 
+  */
 static int already_uses(struct module *a, struct module *b)
 {
 	struct module_use *use;
@@ -407,6 +422,7 @@ static int already_uses(struct module *a, struct module *b)
 }
 
 /* Module a uses b */
+/* 设置模块a使用模块b的依赖关系 */
 static int use_module(struct module *a, struct module *b)
 {
 	struct module_use *use;
@@ -416,6 +432,7 @@ static int use_module(struct module *a, struct module *b)
 		return 0;
 
 	DEBUGP("Allocating new usage for %s.\n", a->name);
+        /* 分配一个use对应的存储空间 */
 	use = kmalloc(sizeof(*use), GFP_ATOMIC);
 	if (!use) {
 		printk("%s: out of memory loading\n", a->name);
@@ -429,14 +446,17 @@ static int use_module(struct module *a, struct module *b)
 }
 
 /* Clear the unload stuff of the module. */
+/* 释放模块，同时减少该模块依赖的其他模块的引用计数 */
 static void module_unload_free(struct module *mod)
 {
 	struct module *i;
 
+        /* 扫描内核中所有模块 */
 	list_for_each_entry(i, &modules, list) {
 		struct module_use *use;
 
 		list_for_each_entry(use, &i->modules_which_use_me, list) {
+                        /* 如果找到了该模块的依赖模块，则将该模块从依赖链表中删除  */
 			if (use->module_which_uses == mod) {
 				DEBUGP("%s unusing %s\n", mod->name, i->name);
 				module_put(i);
@@ -546,6 +566,7 @@ sys_delete_module(const char __user *name_user, unsigned int flags)
 		goto out;
 	}
 
+        /* 判断当前模块是否有其他模块依赖 */
 	if (!list_empty(&mod->modules_which_use_me)) {
 		/* Other modules depend on us: get rid of them first. */
 		ret = -EWOULDBLOCK;
@@ -904,6 +925,7 @@ static inline int same_magic(const char *amagic, const char *bmagic)
 
 /* Resolve a symbol for this module.  I.e. if we find one, record usage.
    Must be holding module_mutex. */
+/* 解析内核当中的符号，同时完成模块之间的依赖关系 */
 static unsigned long resolve_symbol(Elf_Shdr *sechdrs,
 				    unsigned int versindex,
 				    const char *name,
@@ -1074,6 +1096,7 @@ static void mod_kobject_remove(struct module *mod)
 }
 
 /* Free a module, remove from lists, etc (must hold module mutex). */
+/* 释放一个模块，完成相应资源的释放 */
 static void free_module(struct module *mod)
 {
 	/* Delete from various lists */
@@ -1146,8 +1169,8 @@ static int simplify_symbols(Elf_Shdr *sechdrs,
 			       (long)sym[i].st_value);
 			break;
 
-		case SHN_UNDEF:
-			sym[i].st_value
+		case SHN_UNDEF:  
+			sym[i].st_value   /* 自己没有定义的符号则到内核中去查找 */
 			  = resolve_symbol(sechdrs, versindex,
 					   strtab + sym[i].st_name, mod);
 
@@ -1248,6 +1271,7 @@ static void layout_sections(struct module *mod,
 	}
 }
 
+/* 判断是否和gpl兼容 */
 static inline int license_is_gpl_compatible(const char *license)
 {
 	return (strcmp(license, "GPL") == 0
@@ -1257,6 +1281,7 @@ static inline int license_is_gpl_compatible(const char *license)
 		|| strcmp(license, "Dual MPL/GPL") == 0);
 }
 
+/* 设置模块的许可 */
 static void set_license(struct module *mod, const char *license)
 {
 	if (!license)
@@ -1611,6 +1636,9 @@ static struct module *load_module(void __user *umod,
 	set_license(mod, get_modinfo(sechdrs, infoindex, "license"));
 
 	/* Fix up syms, so that st_value is a pointer to location. */
+        /* 解决模块中的符号问题，找到自己没有定义函数的符号，
+          * 在其他模块当中的地址等相关信息
+          */
 	err = simplify_symbols(sechdrs, symindex, strtab, versindex, pcpuindex,
 			       mod);
 	if (err < 0)
@@ -1778,12 +1806,13 @@ sys_init_module(void __user *umod,
 	up(&module_mutex);
 
 	down(&notify_mutex);
+        /* 通知其他模块，当前模块正在初始化 */
 	notifier_call_chain(&module_notify_list, MODULE_STATE_COMING, mod);
 	up(&notify_mutex);
 
 	/* Start the module */
 	if (mod->init != NULL)
-		ret = mod->init();
+		ret = mod->init();       /* 注意在这里调用module_init(fn)指定的初始化函数 */
 	if (ret < 0) {
 		/* Init routine failed: abort.  Try to protect us from
                    buggy refcounters. */
@@ -1803,6 +1832,7 @@ sys_init_module(void __user *umod,
 
 	/* Now it's a first class citizen! */
 	down(&module_mutex);
+        /* 初始化完成之后，就修改模块的状态为正在使用当中 */
 	mod->state = MODULE_STATE_LIVE;
 	/* Drop initial reference. */
 	module_put(mod);

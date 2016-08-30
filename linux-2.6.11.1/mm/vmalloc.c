@@ -177,6 +177,7 @@ static int map_area_pud(pud_t *pud, unsigned long address,
 	return 0;
 }
 
+/* 反映射一段虚拟线性地址空间 */
 void unmap_vm_area(struct vm_struct *area)
 {
 	unsigned long address = (unsigned long) area->addr;
@@ -198,8 +199,10 @@ void unmap_vm_area(struct vm_struct *area)
 	flush_tlb_kernel_range((unsigned long) area->addr, end);
 }
 
+/* 映射虚拟地址和物理内存页之间的关系 */
 int map_vm_area(struct vm_struct *area, pgprot_t prot, struct page ***pages)
 {
+	/* 取得线性地址的首地址和末尾地址 */
 	unsigned long address = (unsigned long) area->addr;
 	unsigned long end = address + (area->size-PAGE_SIZE);
 	unsigned long next;

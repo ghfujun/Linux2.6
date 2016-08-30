@@ -30,6 +30,7 @@
 
 #define DEBUGP(fmt...) 
  
+/* 模块虚拟内存链表 */
 static struct vm_struct *mod_vmlist;
 
 void module_free(struct module *mod, void *module_region)
@@ -53,6 +54,7 @@ void module_free(struct module *mod, void *module_region)
  found:
 	unmap_vm_area(map);
 	write_unlock(&vmlist_lock); 
+        /* 释放线性地址所对应的内存页 */
 	if (map->pages) {
 		for (i = 0; i < map->nr_pages; i++)
 			if (map->pages[i])
@@ -62,6 +64,7 @@ void module_free(struct module *mod, void *module_region)
 	kfree(map);					
 }
 
+/* 给模块分配size大小的一块内存 */
 void *module_alloc(unsigned long size)
 {
 	struct vm_struct **p, *tmp, *area;
@@ -82,6 +85,7 @@ void *module_alloc(unsigned long size)
 
 	write_lock(&vmlist_lock);
 	addr = (void *) MODULES_VADDR;
+        /* 从链表当中找到一个合适的区间 */
 	for (p = &mod_vmlist; (tmp = *p); p = &tmp->next) {
 		void *next; 
 		DEBUGP("vmlist %p %lu addr %p\n", tmp->addr, tmp->size, addr);
@@ -105,6 +109,7 @@ void *module_alloc(unsigned long size)
 	area->addr = addr;
 	write_unlock(&vmlist_lock);
 
+        /* 计算内存页的数量和内存页描述符的空间 */
 	nr_pages = size >> PAGE_SHIFT;
 	array_size = (nr_pages * sizeof(struct page *));
 
@@ -115,6 +120,7 @@ void *module_alloc(unsigned long size)
 
 	memset(area->pages, 0, array_size);
 	for (i = 0; i < nr_pages; i++) {
+                /* 分配一页的物理内存 */
 		area->pages[i] = alloc_page(GFP_KERNEL);
 		if (area->pages[i] == NULL)
 			goto fail;

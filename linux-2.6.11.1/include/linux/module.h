@@ -209,6 +209,7 @@ void *__symbol_get_gpl(const char *symbol);
 
 #endif
 
+/* 内核模块的引用计数 */
 struct module_ref
 {
 	local_t count;			/* 模块的引用计数 */
@@ -241,19 +242,20 @@ struct module_param_attrs;
 /* 内核模块结构 */
 struct module
 {
-	enum module_state state;
+	enum module_state state;      /* 记录模块的状态 */
 
 	/* Member of list of modules */
-	struct list_head list;
+	struct list_head list;           /* 作为一个双向链表，链接所有的内核模块 */
 
 	/* Unique handle for this module */
-	char name[MODULE_NAME_LEN];
+	char name[MODULE_NAME_LEN];        /* 内核模块的名称 */
 
 	/* Sysfs stuff. */
 	struct module_kobject mkobj;
 	struct module_param_attrs *param_attrs;
 
 	/* Exported symbols */
+        /* 内核导出的符号以及符号的数量 */
 	const struct kernel_symbol *syms;
 	unsigned int num_syms;
 	const unsigned long *crcs;
@@ -267,10 +269,11 @@ struct module
 	unsigned int num_exentries;
 	const struct exception_table_entry *extable;
 
-	/* Startup function. */
+	/* Startup function. */   /* 模块的初始化函数，一般在内核模块开发的时候，需要实现 */
 	int (*init)(void);
 
 	/* If this is non-NULL, vfree after init() returns */
+        /* 在初始化完成最后阶段会释放该指针指向的内存 */
 	void *module_init;
 
 	/* Here is the actual code + data, vfree'd on unload. */
@@ -289,19 +292,22 @@ struct module
 	int unsafe;
 
 	/* Am I GPL-compatible */
-	int license_gplok;
+	int license_gplok;  /* 是否和gpl兼容的许可 */
 
 #ifdef CONFIG_MODULE_UNLOAD
 	/* Reference counts */
 	struct module_ref ref[NR_CPUS];			/* 模块在不同CPU上的引用计数 */
 
 	/* What modules depend on me? */
+        /* 内核中那些模块依赖该模块，注意这里并不是通过每个struct module结构的
+          * 该变量来形成双向链表，而是通过struct module_use，注意这里也用到了容器技术
+          */
 	struct list_head modules_which_use_me;
 
 	/* Who is waiting for us to be unloaded */
 	struct task_struct *waiter;				/* 等待使用模块的进程队列 */
 
-	/* Destruction function. */
+	/* Destruction function. */           /* 模块的退出函数 */
 	void (*exit)(void);
 #endif
 
