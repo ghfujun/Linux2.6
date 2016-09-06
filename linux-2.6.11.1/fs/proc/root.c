@@ -37,6 +37,8 @@ static struct file_system_type proc_fs_type = {
 };
 
 extern int __init proc_init_inodecache(void);
+
+/* 初始化proc文件系统 */
 void __init proc_root_init(void)
 {
 	int err = proc_init_inodecache();
@@ -138,10 +140,11 @@ static struct inode_operations proc_root_inode_operations = {
 /*
  * This is the root "inode" in the /proc tree..
  */
+/* proc文件系统的根目录 */
 struct proc_dir_entry proc_root = {
 	.low_ino	= PROC_ROOT_INO, 
 	.namelen	= 5, 
-	.name		= "/proc",
+	.name		= "/proc",                /* 根目录的名称 */
 	.mode		= S_IFDIR | S_IRUGO | S_IXUGO, 
 	.nlink		= 2, 
 	.proc_iops	= &proc_root_inode_operations, 

@@ -37,9 +37,11 @@ struct vfsmount
 	atomic_t mnt_count;             /* 引用计数 */
 	int mnt_flags;
 	int mnt_expiry_mark;		/* true if marked for expiry */
+        /* 设备名称，其实也就是路径吧 */
 	char *mnt_devname;		/* Name of device e.g. /dev/dsk/hda1 */
 	struct list_head mnt_list;
 	struct list_head mnt_fslink;	/* link in fs-specific expiry list */
+        /* 挂载点对应的名称空间 */
 	struct namespace *mnt_namespace; /* containing namespace */
 };
 

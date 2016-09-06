@@ -14,7 +14,9 @@
 /* Random magic number */
 #define SYSFS_MAGIC 0x62656572
 
+/* sysfs文件系统的挂载点 */
 struct vfsmount *sysfs_mount;
+/* sysfs文件系统的超级块 */
 struct super_block * sysfs_sb = NULL;
 kmem_cache_t *sysfs_dir_cachep;
 
@@ -40,6 +42,7 @@ static int sysfs_fill_super(struct super_block *sb, void *data, int silent)
 	sb->s_magic = SYSFS_MAGIC;
 	sb->s_op = &sysfs_ops;
 	sb->s_time_gran = 1;
+        /* 设置sysfs_sb超级块 */
 	sysfs_sb = sb;
 
 	inode = sysfs_new_inode(S_IFDIR | S_IRWXU | S_IRUGO | S_IXUGO);
@@ -52,7 +55,7 @@ static int sysfs_fill_super(struct super_block *sb, void *data, int silent)
 		pr_debug("sysfs: could not get root inode\n");
 		return -ENOMEM;
 	}
-
+        /* 分配sysfs文件系统的‘/'目录 */
 	root = d_alloc_root(inode);
 	if (!root) {
 		pr_debug("%s: could not get root dentry!\n",__FUNCTION__);
@@ -60,6 +63,7 @@ static int sysfs_fill_super(struct super_block *sb, void *data, int silent)
 		return -ENOMEM;
 	}
 	root->d_fsdata = &sysfs_root;
+        /* 设置超级块的根目录，也就上刚才分配的'/’目录 */
 	sb->s_root = root;
 	return 0;
 }
@@ -76,6 +80,7 @@ static struct file_system_type sysfs_fs_type = {
 	.kill_sb	= kill_litter_super,
 };
 
+/* 初始化sysfs文件系统 */
 int __init sysfs_init(void)
 {
 	int err = -ENOMEM;

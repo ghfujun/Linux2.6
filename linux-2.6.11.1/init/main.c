@@ -509,6 +509,7 @@ asmlinkage void __init start_kernel(void)
 	/* rootfs populating might need page-writeback */
 	page_writeback_init();
 #ifdef CONFIG_PROC_FS
+        /* 初始化proc文件系统 */
 	proc_root_init();
 #endif
 	check_bugs();

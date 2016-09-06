@@ -62,6 +62,7 @@ DEFINE_PER_CPU(unsigned long, process_counts) = 0;
 
 EXPORT_SYMBOL(tasklist_lock);
 
+/* 获取进程数量 */
 int nr_processes(void)
 {
 	int cpu;
@@ -151,6 +152,7 @@ static struct task_struct *dup_task_struct(struct task_struct *orig)
 		return NULL;
 	}
 
+        /* 修改指针的指向关系 */
 	*ti = *orig->thread_info;
 	*tsk = *orig;
 	tsk->thread_info = ti;
@@ -798,6 +800,7 @@ static task_t *copy_process(unsigned long clone_flags,
 	int retval;
 	struct task_struct *p = NULL;
 
+        /* 判断标记是否冲突 */
 	if ((clone_flags & (CLONE_NEWNS|CLONE_FS)) == (CLONE_NEWNS|CLONE_FS))
 		return ERR_PTR(-EINVAL);
 

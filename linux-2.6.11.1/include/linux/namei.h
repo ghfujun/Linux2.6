@@ -13,8 +13,8 @@ struct open_intent {
 enum { MAX_NESTED_LINKS = 5 };
 
 struct nameidata {
-	struct dentry	*dentry;
-	struct vfsmount *mnt;
+	struct dentry	*dentry;          /* 从哪个目录开始查找的 */
+	struct vfsmount *mnt;           /* 路径的挂载点 */
 	struct qstr	last;
 	unsigned int	flags;
 	int		last_type;

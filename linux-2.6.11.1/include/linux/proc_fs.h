@@ -47,10 +47,11 @@ typedef	int (write_proc_t)(struct file *file, const char __user *buffer,
 			   unsigned long count, void *data);
 typedef int (get_info_t)(char *, char **, off_t, int);
 
+/* proc文件系统的目录结构 */
 struct proc_dir_entry {
-	unsigned int low_ino;
-	unsigned short namelen;
-	const char *name;
+	unsigned int low_ino;        /* proc文件系统的ino号，所以该结构中并没有inode的指针 */
+	unsigned short namelen;   /* 指向目录的长度，因为目录的数据直接存放在结构体后面 */
+	const char *name;   /* 指向目录的名称 */
 	mode_t mode;
 	nlink_t nlink;
 	uid_t uid;
@@ -60,6 +61,7 @@ struct proc_dir_entry {
 	struct file_operations * proc_fops;
 	get_info_t *get_info;
 	struct module *owner;
+        /* proc目录的父目录，下一个目录，子目录 */
 	struct proc_dir_entry *next, *parent, *subdir;
 	void *data;
 	read_proc_t *read_proc;

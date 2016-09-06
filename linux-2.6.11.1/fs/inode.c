@@ -227,6 +227,7 @@ static void init_once(void * foo, kmem_cache_t * cachep, unsigned long flags)
 /*
  * inode_lock must be held
  */
+/* 增加inode的引用计数 */
 void __iget(struct inode * inode)
 {
 	if (atomic_read(&inode->i_count)) {
@@ -536,6 +537,7 @@ repeat:
  * find_inode_fast is the fast path version of find_inode, see the comment at
  * iget_locked for details.
  */
+/* 查找hash链表中ino和su都相同的inode */
 static struct inode * find_inode_fast(struct super_block * sb, struct hlist_head *head, unsigned long ino)
 {
 	struct hlist_node *node;
@@ -662,6 +664,7 @@ set_failed:
  * get_new_inode_fast is the fast path version of get_new_inode, see the
  * comment at iget_locked for details.
  */
+/* 快速新建inode */
 static struct inode * get_new_inode_fast(struct super_block *sb, struct hlist_head *head, unsigned long ino)
 {
 	struct inode * inode;
@@ -673,6 +676,7 @@ static struct inode * get_new_inode_fast(struct super_block *sb, struct hlist_he
 		spin_lock(&inode_lock);
 		/* We released the lock, so.. */
 		old = find_inode_fast(sb, head, ino);
+                /* 如果没有，则重新创建，赋值，返回*/
 		if (!old) {
 			inode->i_ino = ino;
 			inodes_stat.nr_inodes++;
@@ -693,6 +697,7 @@ static struct inode * get_new_inode_fast(struct super_block *sb, struct hlist_he
 		 * us. Use the old inode instead of the one we just
 		 * allocated.
 		 */
+                /* 如果已经有了，则直接返回 */
 		__iget(old);
 		spin_unlock(&inode_lock);
 		destroy_inode(inode);

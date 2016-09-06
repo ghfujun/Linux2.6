@@ -38,9 +38,13 @@ static inline int sysfs_init(void)
 
 /* spinlock for vfsmount related operations, inplace of dcache_lock */
  __cacheline_aligned_in_smp DEFINE_SPINLOCK(vfsmount_lock);
-
+/* 是一个数组空间，数组中的每个元素都表示一个双向链表 */
 static struct list_head *mount_hashtable;
+/* mount_hashtable中的元素个数用2的hash_bits方表示
+  * hash_mask为2的hash_bits方减1
+  */
 static int hash_mask, hash_bits;
+/* 专门用来分配struct vfsmount 的cache */
 static kmem_cache_t *mnt_cache; 
 
 static inline unsigned long hash(struct vfsmount *mnt, struct dentry *dentry)
@@ -75,6 +79,7 @@ struct vfsmount *alloc_vfsmnt(const char *name)
 	return mnt;
 }
 
+/* 释放挂载点名称和挂载点本身 */
 void free_vfsmnt(struct vfsmount *mnt)
 {
 	kfree(mnt->mnt_devname);
@@ -152,6 +157,7 @@ static struct vfsmount *
 clone_mnt(struct vfsmount *old, struct dentry *root)
 {
 	struct super_block *sb = old->mnt_sb;
+        /* 分配一个设备名为mnt_devname的挂载点 */
 	struct vfsmount *mnt = alloc_vfsmnt(old->mnt_devname);
 
 	if (mnt) {
@@ -1060,6 +1066,7 @@ dput_out:
 	return retval;
 }
 
+/* 拷贝名称空间 */
 int copy_namespace(int flags, struct task_struct *tsk)
 {
 	struct namespace *namespace = tsk->namespace;
@@ -1073,6 +1080,7 @@ int copy_namespace(int flags, struct task_struct *tsk)
 
 	get_namespace(namespace);
 
+        /* 如果不是新建名称空间，则不做任何处理 */
 	if (!(flags & CLONE_NEWNS))
 		return 0;
 
@@ -1085,6 +1093,7 @@ int copy_namespace(int flags, struct task_struct *tsk)
 	if (!new_ns)
 		goto out;
 
+        /* 设置引用计数和初始化信号量 */
 	atomic_set(&new_ns->count, 1);
 	init_rwsem(&new_ns->sem);
 	INIT_LIST_HEAD(&new_ns->list);
@@ -1213,6 +1222,7 @@ void set_fs_root(struct fs_struct *fs, struct vfsmount *mnt,
  * Replace the fs->{pwdmnt,pwd} with {mnt,dentry}. Put the old values.
  * It can block. Requires the big lock held.
  */
+/* 设置fs的pwd */
 void set_fs_pwd(struct fs_struct *fs, struct vfsmount *mnt,
 		struct dentry *dentry)
 {
@@ -1379,6 +1389,7 @@ static void __init init_mount_tree(void)
 	namespace->root = mnt;
 	mnt->mnt_namespace = namespace;
 
+        /* 设置0好进程的名称空间 */
 	init_task.namespace = namespace;
 	read_lock(&tasklist_lock);
 	do_each_thread(g, p) {
@@ -1387,6 +1398,10 @@ static void __init init_mount_tree(void)
 	} while_each_thread(g, p);
 	read_unlock(&tasklist_lock);
 
+        /* 设置当前进程的工作目录和'/'目录，注意此时的当前进程就是
+          * 1号进程 ，在之后的进程复制过程当中，自然都会复制过去，除非自己去更改 
+          * 这也意味着1号进程的根目录和当前工作目录的路径都为'/'  
+          */
 	set_fs_pwd(current->fs, namespace->root, namespace->root->mnt_root);
 	set_fs_root(current->fs, namespace->root, namespace->root->mnt_root);
 }
@@ -1413,7 +1428,9 @@ void __init mnt_init(unsigned long mempages)
 	 * We don't guarantee that "sizeof(struct list_head)" is necessarily
 	 * a power-of-two.
 	 */
+        /* 计算mount_hashtable中元素的个数 */
 	nr_hash = (1UL << order) * PAGE_SIZE / sizeof(struct list_head);
+        /* 计算nr_hash个元素用2的多少次方可以表示 */
 	hash_bits = 0;
 	do {
 		hash_bits++;
@@ -1424,6 +1441,7 @@ void __init mnt_init(unsigned long mempages)
 	 * Re-calculate the actual number of entries and the mask
 	 * from the number of bits we can fit.
 	 */
+        /* 最终nr_hash是在最接近2的n次方的地方向下取整 */
 	nr_hash = 1UL << hash_bits;
 	hash_mask = nr_hash-1;
 
@@ -1431,6 +1449,7 @@ void __init mnt_init(unsigned long mempages)
 			nr_hash, order, (PAGE_SIZE << order));
 
 	/* And initialize the newly allocated array */
+        /* 将所有的双向链表初始化 */
 	d = mount_hashtable;
 	i = nr_hash;
 	do {
@@ -1438,6 +1457,7 @@ void __init mnt_init(unsigned long mempages)
 		d++;
 		i--;
 	} while (i);
+        /* 初始化sysfs文件系统 */
 	sysfs_init();
         /* 初始化rootfs */
 	init_rootfs();

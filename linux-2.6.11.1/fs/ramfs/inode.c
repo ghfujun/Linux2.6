@@ -48,6 +48,7 @@ static struct backing_dev_info ramfs_backing_dev_info = {
 	.memory_backed	= 1,	/* Does not contribute to dirty memory */
 };
 
+/* 创建ramfs文件系统的inode */
 struct inode *ramfs_get_inode(struct super_block *sb, int mode, dev_t dev)
 {
 	struct inode * inode = new_inode(sb);
@@ -176,6 +177,7 @@ static struct super_operations ramfs_ops = {
 	.drop_inode	= generic_delete_inode,
 };
 
+/* 填充rootfs的超级块，设置超级块的根目录和根目录对应的inode  */
 static int ramfs_fill_super(struct super_block * sb, void * data, int silent)
 {
 	struct inode * inode;
@@ -218,6 +220,8 @@ static struct file_system_type ramfs_fs_type = {
 	.get_sb		= ramfs_get_sb,
 	.kill_sb	= kill_litter_super,
 };
+
+/* 注意rootfs是一种内存类型的文件系统 */
 static struct file_system_type rootfs_fs_type = {
 	.name		= "rootfs",
 	.get_sb		= rootfs_get_sb,

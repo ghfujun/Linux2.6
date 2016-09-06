@@ -5,6 +5,7 @@
 #include <linux/mount.h>
 #include <linux/sched.h>
 
+/* 资源隔离的名称空间 */
 struct namespace {
 	atomic_t		count;
 	struct vfsmount *	root;
@@ -33,6 +34,7 @@ static inline void exit_namespace(struct task_struct *p)
 	}
 }
 
+/* 增加名称空间引用计数 */
 static inline void get_namespace(struct namespace *namespace)
 {
 	atomic_inc(&namespace->count);

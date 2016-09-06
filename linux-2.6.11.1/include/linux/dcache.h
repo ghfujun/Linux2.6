@@ -97,7 +97,7 @@ struct dentry {
 	 */
         /* 指向目录的父目录 */
 	struct dentry *d_parent;	/* parent directory */
-        /* 路径的名称 */
+        /* 目录的名称 */
 	struct qstr d_name;               
 
         /* 服务于LRU算法(近期最少使用算法) */
@@ -117,6 +117,7 @@ struct dentry {
 	void *d_fsdata;			/* fs-specific data */
  	struct rcu_head d_rcu;           /* 目录和文件的rcu结构 */
 	struct dcookie_struct *d_cookie; /* cookie, if any */
+        /* 路径查找的hash结构 */
 	struct hlist_node d_hash;	/* lookup hash list */	
 	int d_mounted;
 	unsigned char d_iname[DNAME_INLINE_LEN_MIN];	/* small names */

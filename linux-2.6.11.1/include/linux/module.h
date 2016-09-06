@@ -191,6 +191,7 @@ void *__symbol_get_gpl(const char *symbol);
 #endif
 
 /* For every exported symbol, place a struct in the __ksymtab section */
+/* 导出到内核符号表当中 */
 #define __EXPORT_SYMBOL(sym, sec)				\
 	__CRC_SYMBOL(sym, sec)					\
 	static const char __kstrtab_##sym[]			\
@@ -231,6 +232,7 @@ struct module_sect_attr
 	unsigned long address;
 };
 
+/* 内核模块的段属性 */
 struct module_sect_attrs
 {
 	struct attribute_group grp;
@@ -258,7 +260,8 @@ struct module
         /* 内核导出的符号以及符号的数量 */
 	const struct kernel_symbol *syms;
 	unsigned int num_syms;
-	const unsigned long *crcs;
+        /* 也是一个具有num_syms个元素的数组，存储了导出符号的校验和，用于实现版本控制 */
+	const unsigned long *crcs; 
 
 	/* GPL-only exported symbols. */
 	const struct kernel_symbol *gpl_syms;
@@ -266,6 +269,7 @@ struct module
 	const unsigned long *gpl_crcs;
 
 	/* Exception table */
+        /* 异常表，num_exentries指定了数组的长度 */
 	unsigned int num_exentries;
 	const struct exception_table_entry *extable;
 
@@ -286,6 +290,7 @@ struct module
 	unsigned long init_text_size, core_text_size;
 
 	/* Arch-specific module values */
+        /* 与特定的处理器架构相关 */
 	struct mod_arch_specific arch;
 
 	/* Am I unsafe to unload? */
@@ -305,7 +310,8 @@ struct module
 	struct list_head modules_which_use_me;
 
 	/* Who is waiting for us to be unloaded */
-	struct task_struct *waiter;				/* 等待使用模块的进程队列 */
+        /* 等待使用模块的进程队列 ，指向导致模块卸载并且正在等待该操作结束的进程 */
+	struct task_struct *waiter;				
 
 	/* Destruction function. */           /* 模块的退出函数 */
 	void (*exit)(void);
@@ -313,11 +319,13 @@ struct module
 
 #ifdef CONFIG_KALLSYMS
 	/* We keep the symbol and string tables for kallsyms. */
+        /*  kallsyms的符号表和字符串标，用于记录该模块的所有符号信息 */
 	Elf_Sym *symtab;
 	unsigned long num_symtab;
 	char *strtab;
 
 	/* Section attributes */
+        /* 模块中各段的属性 */
 	struct module_sect_attrs *sect_attrs;
 #endif
 

@@ -582,6 +582,7 @@ struct task_struct {
 	struct sched_info sched_info;
 #endif
 
+        /* 链接全局的所有PCB */
 	struct list_head tasks;
 	/*
 	 * ptrace_list/ptrace_children forms the list of my children
@@ -661,6 +662,7 @@ struct task_struct {
 /* CPU-specific state of this task */
 	struct thread_struct thread;
 /* filesystem information */
+        /* 进程的文件系统信息 */
 	struct fs_struct *fs;
 /* open file information */
         /* 进程打开的文件结构，在1.0版本当中，里面仅仅是一个数组，
@@ -668,6 +670,9 @@ struct task_struct {
           */
 	struct files_struct *files;
 /* namespace */
+        /* Linux内核中资源隔离的名称空间
+          *
+          */
 	struct namespace *namespace;
 /* signal handlers */
 	struct signal_struct *signal;

@@ -964,6 +964,7 @@ int fastcall path_lookup(const char *name, unsigned int flags, struct nameidata 
 	nd->depth = 0;
 
 	read_lock(&current->fs->lock);
+        /* 如果首字母是'/'，则表示从根文件系统开始查找 */
 	if (*name=='/') {
 		if (current->fs->altroot && !(nd->flags & LOOKUP_NOALT)) {
 			nd->mnt = mntget(current->fs->altrootmnt);
@@ -976,6 +977,7 @@ int fastcall path_lookup(const char *name, unsigned int flags, struct nameidata 
 		nd->mnt = mntget(current->fs->rootmnt);
 		nd->dentry = dget(current->fs->root);
 	} else {
+                /* 如果不是的，则从当前目录开始查找 */
 		nd->mnt = mntget(current->fs->pwdmnt);
 		nd->dentry = dget(current->fs->pwd);
 	}
@@ -1354,7 +1356,7 @@ int may_open(struct nameidata *nd, int acc_mode, int flag)
  * for symlinks (where the permissions are checked later).
  * SMP-safe
  */
-/* ?��  � � ?��  开? �?*/
+/* 打开一个路径，并将路径找到的信息数据存放在struct nameidata当中 */
 int open_namei(const char * pathname, int flag, int mode, struct nameidata *nd)
 {
 	int acc_mode, error = 0;

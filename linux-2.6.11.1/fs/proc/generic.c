@@ -369,6 +369,7 @@ struct dentry *proc_lookup(struct inode * dir, struct dentry *dentry, struct nam
 	lock_kernel();
 	de = PDE(dir);
 	if (de) {
+                /* 从dir的所有子目录中查找 */
 		for (de = de->subdir; de ; de = de->next) {
 			if (de->namelen != dentry->d_name.len)
 				continue;
@@ -478,14 +479,16 @@ static struct inode_operations proc_dir_inode_operations = {
 	.setattr	= proc_notify_change,
 };
 
+/* 注册父目录和子目录之间的关系 */
 static int proc_register(struct proc_dir_entry * dir, struct proc_dir_entry * dp)
 {
 	unsigned int i;
-	
+	/* 获取子目录的ino */
 	i = get_inode_number();
 	if (i == 0)
 		return -EAGAIN;
 	dp->low_ino = i;
+        /* 设置目录之间的连接关系 */
 	dp->next = dir->subdir;
 	dp->parent = dir;
 	dir->subdir = dp;
@@ -537,6 +540,7 @@ static void proc_kill_inodes(struct proc_dir_entry *de)
 	file_list_unlock();
 }
 
+/* 分配一个proc的目录结构 */
 static struct proc_dir_entry *proc_create(struct proc_dir_entry **parent,
 					  const char *name,
 					  mode_t mode,
@@ -558,6 +562,7 @@ static struct proc_dir_entry *proc_create(struct proc_dir_entry **parent,
 
 	len = strlen(fn);
 
+        /* 分配一个proc目录 */
 	ent = kmalloc(sizeof(struct proc_dir_entry) + len + 1, GFP_KERNEL);
 	if (!ent) goto out;
 
@@ -605,7 +610,8 @@ struct proc_dir_entry *proc_mkdir_mode(const char *name, mode_t mode,
 	if (ent) {
 		ent->proc_fops = &proc_dir_operations;
 		ent->proc_iops = &proc_dir_inode_operations;
-
+                
+                /* 设置父子目录关系 */
 		if (proc_register(parent, ent) < 0) {
 			kfree(ent);
 			ent = NULL;
@@ -614,6 +620,7 @@ struct proc_dir_entry *proc_mkdir_mode(const char *name, mode_t mode,
 	return ent;
 }
 
+/* proc文件系统中创建名称为name的目录 */
 struct proc_dir_entry *proc_mkdir(const char *name,
 		struct proc_dir_entry *parent)
 {

@@ -763,7 +763,7 @@ extern spinlock_t sb_lock;
 #define S_BIAS (1<<30)
 /* 文件系统的超级块 */
 struct super_block {
-        /* 超级块链表 */
+        /* 链接所有超级块的链表 */
 	struct list_head	s_list;		/* Keep this first */
 	dev_t			s_dev;		/* search index; _not_ kdev_t */
 	unsigned long		s_blocksize;   /* 以字节为单位的块大小 */
@@ -780,7 +780,7 @@ struct super_block {
 	unsigned long		s_magic;
 	/* 超级块的根目录 */
 	struct dentry		*s_root;
-	struct rw_semaphore	s_umount;
+	struct rw_semaphore	s_umount;   /* 超级块信号量 */
 	struct semaphore	s_lock;
 	int			s_count;
 	int			s_syncing;
@@ -796,7 +796,7 @@ struct super_block {
 	struct list_head	s_files;
 
 	struct block_device	*s_bdev;
-	struct list_head	s_instances;
+	struct list_head	s_instances;       /* 链接同一文件系统中所有超级块 */
 	struct quota_info	s_dquot;	/* Diskquota specific options */
 
 	int			s_frozen;
@@ -1179,9 +1179,9 @@ struct file_system_type {
 	struct super_block *(*get_sb) (struct file_system_type *, int,
 				       const char *, void *);
 	void (*kill_sb) (struct super_block *);
-	struct module *owner;
+	struct module *owner;       /* 文件系统所对应的模块 */
 	struct file_system_type * next;
-	struct list_head fs_supers;             /* 超级块链表 */
+	struct list_head fs_supers;             /* 同一个文件系统中所有超级块链表 */
 };
 
 struct super_block *get_sb_bdev(struct file_system_type *fs_type,

@@ -44,6 +44,7 @@ void get_filesystem(struct file_system_type *fs);
 void put_filesystem(struct file_system_type *fs);
 struct file_system_type *get_fs_type(const char *name);
 
+/* 系统中所有超级块的链表 */
 LIST_HEAD(super_blocks);
 DEFINE_SPINLOCK(sb_lock);
 
@@ -53,6 +54,7 @@ DEFINE_SPINLOCK(sb_lock);
  *	Allocates and initializes a new &struct super_block.  alloc_super()
  *	returns a pointer new superblock or %NULL if allocation had failed.
  */
+/* 分配一个超级块 */
 static struct super_block *alloc_super(void)
 {
 	struct super_block *s = kmalloc(sizeof(struct super_block),  GFP_USER);
@@ -306,6 +308,7 @@ retry:
 		destroy_super(s);
 		return ERR_PTR(err);
 	}
+        /* 设置超级块对应的文件系统 */
 	s->s_type = type;
 	strlcpy(s->s_id, type->name, sizeof(s->s_id));
 	list_add_tail(&s->s_list, &super_blocks);
@@ -592,6 +595,7 @@ void emergency_remount(void)
 static struct idr unnamed_dev_idr;
 static DEFINE_SPINLOCK(unnamed_dev_lock);/* protects the above */
 
+/* 设置匿名超级块，这是超级块设备号  */
 int set_anon_super(struct super_block *s, void *data)
 {
 	int dev;
@@ -738,6 +742,7 @@ void kill_block_super(struct super_block *sb)
 
 EXPORT_SYMBOL(kill_block_super);
 
+/* 获取没有设备的文件系统的超级块，也就是整个文件系统都在内存当中 */
 struct super_block *get_sb_nodev(struct file_system_type *fs_type,
 	int flags, void *data,
 	int (*fill_super)(struct super_block *, void *, int))
@@ -769,6 +774,7 @@ static int compare_single(struct super_block *s, void *p)
 	return 1;
 }
 
+/* 获取sysfs文件系统的超级块 */
 struct super_block *get_sb_single(struct file_system_type *fs_type,
 	int flags, void *data,
 	int (*fill_super)(struct super_block *, void *, int))
@@ -808,6 +814,7 @@ do_kern_mount(const char *fstype, int flags, const char *name, void *data)
 	if (!type)
 		return ERR_PTR(-ENODEV);
 
+        /* 分配一个虚拟挂载点，如sysfs文件系统，则此处的name就是sysfs */
 	mnt = alloc_vfsmnt(name);
 	if (!mnt)
 		goto out;
@@ -826,6 +833,7 @@ do_kern_mount(const char *fstype, int flags, const char *name, void *data)
 		}
 	}
 
+        /* 获取文件系统超级块 */
 	sb = type->get_sb(type, flags, name, data);
 	if (IS_ERR(sb))
 		goto out_free_secdata;
@@ -835,6 +843,7 @@ do_kern_mount(const char *fstype, int flags, const char *name, void *data)
 	mnt->mnt_sb = sb;
 	mnt->mnt_root = dget(sb->s_root);
 	mnt->mnt_mountpoint = sb->s_root;
+        /* 自己挂在自就得文件系统当中 */
 	mnt->mnt_parent = mnt;
 	mnt->mnt_namespace = current->namespace;
 	up_write(&sb->s_umount);

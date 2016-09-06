@@ -105,6 +105,7 @@ void __module_put_and_exit(struct module *mod, long code)
 EXPORT_SYMBOL(__module_put_and_exit);
 	
 /* Find a module section: 0 means not found. */
+/* 查找section header名称为name的section的索引 */
 static unsigned int find_sec(Elf_Ehdr *hdr,
 			     Elf_Shdr *sechdrs,
 			     const char *secstrings,
@@ -150,12 +151,14 @@ static unsigned long __find_symbol(const char *name,
 
 	/* Core kernel first. */ 
 	*owner = NULL;
+        /* 首先从核心内核符号表中查找 */
 	for (i = 0; __start___ksymtab+i < __stop___ksymtab; i++) {
 		if (strcmp(__start___ksymtab[i].name, name) == 0) {
 			*crc = symversion(__start___kcrctab, i);
 			return __start___ksymtab[i].value;
 		}
 	}
+        /* 然后从gpl内核符号表中查找 */
 	if (gplok) {
 		for (i = 0; __start___ksymtab_gpl+i<__stop___ksymtab_gpl; i++)
 			if (strcmp(__start___ksymtab_gpl[i].name, name) == 0) {
@@ -165,6 +168,7 @@ static unsigned long __find_symbol(const char *name,
 	}
 
 	/* Now try modules. */ 
+        /* 然后从模块符号表中查找 */
 	list_for_each_entry(mod, &modules, list) {
 		*owner = mod;
 		for (i = 0; i < mod->num_syms; i++)
@@ -1394,7 +1398,7 @@ static void add_kallsyms(struct module *mod,
 			 const char *secstrings)
 {
 	unsigned int i;
-
+        /* 计算符号的首地址和符号的数量 */
 	mod->symtab = (void *)sechdrs[symindex].sh_addr;
 	mod->num_symtab = sechdrs[symindex].sh_size / sizeof(Elf_Sym);
 	mod->strtab = (void *)sechdrs[strindex].sh_addr;
@@ -1417,7 +1421,10 @@ static inline void add_kallsyms(struct module *mod,
 /* Allocate and load the module: note that size of section 0 is always
    zero, and we rely on this for optional sections. */
 
-/* 加载内核模块 */
+/* 加载内核模块
+  * umod表示内核模块用户空间数据 
+  * len表示内核需要从用户控件拷贝的数据长度  
+  */
 static struct module *load_module(void __user *umod,
 				  unsigned long len,
 				  const char __user *uargs)
@@ -1443,6 +1450,7 @@ static struct module *load_module(void __user *umod,
 	/* vmalloc barfs on "unusual" numbers.  Check here */
 	if (len > 64 * 1024 * 1024 || (hdr = vmalloc(len)) == NULL)
 		return ERR_PTR(-ENOMEM);
+        /* 将模块二进制数据拷贝到内核空间 ，然后进行解析加载 */
 	if (copy_from_user(hdr, umod, len) != 0) {
 		err = -EFAULT;
 		goto free_hdr;
@@ -1450,6 +1458,7 @@ static struct module *load_module(void __user *umod,
 
 	/* Sanity checks against insmoding binaries or wrong arch,
            weird elf version */
+        /* 检查是否可执行的elf文件 */
 	if (memcmp(hdr->e_ident, ELFMAG, 4) != 0
 	    || hdr->e_type != ET_REL
 	    || !elf_check_arch(hdr)
@@ -1458,14 +1467,17 @@ static struct module *load_module(void __user *umod,
 		goto free_hdr;
 	}
 
+        /* 分配的内存要足够section header table的空间 */
 	if (len < hdr->e_shoff + hdr->e_shnum * sizeof(Elf_Shdr))
 		goto truncated;
 
 	/* Convenience variables */
 	sechdrs = (void *)hdr + hdr->e_shoff;
+        /* 取出存放section name的entry */
 	secstrings = (void *)hdr + sechdrs[hdr->e_shstrndx].sh_offset;
 	sechdrs[0].sh_addr = 0;
 
+        /* 从第一个section开始，扫描全部的section header entry */
 	for (i = 1; i < hdr->e_shnum; i++) {
 		if (sechdrs[i].sh_type != SHT_NOBITS
 		    && len < sechdrs[i].sh_offset + sechdrs[i].sh_size)
@@ -1473,6 +1485,7 @@ static struct module *load_module(void __user *umod,
 
 		/* Mark all sections sh_addr with their address in the
 		   temporary image. */
+                /* 设置section header的地址 */
 		sechdrs[i].sh_addr = (size_t)hdr + sechdrs[i].sh_offset;
 
 		/* Internal symbols and strings. */
@@ -1488,6 +1501,7 @@ static struct module *load_module(void __user *umod,
 #endif
 	}
 
+        /* 注意.gnu.linkonce.this_module这个段存放的是模块的指针 */
 	modindex = find_sec(hdr, sechdrs, secstrings,
 			    ".gnu.linkonce.this_module");
 	if (!modindex) {
@@ -1505,6 +1519,7 @@ static struct module *load_module(void __user *umod,
 	}
 
 	/* Optional sections */
+        /* 查找不同section的索引 */
 	exportindex = find_sec(hdr, sechdrs, secstrings, "__ksymtab");
 	gplindex = find_sec(hdr, sechdrs, secstrings, "__ksymtab_gpl");
 	crcindex = find_sec(hdr, sechdrs, secstrings, "__kcrctab");
@@ -1559,6 +1574,7 @@ static struct module *load_module(void __user *umod,
 		goto free_mod;
 	}
 
+        /* 查找当前模块是否存在 */
 	if (find_module(mod->name)) {
 		err = -EEXIST;
 		goto free_mod;
@@ -1923,6 +1939,7 @@ const char *module_address_lookup(unsigned long addr,
 	return NULL;
 }
 
+/* 获取内核模块链表当中前symnum个符号 */
 struct module *module_get_kallsym(unsigned int symnum,
 				  unsigned long *value,
 				  char *type,
@@ -1931,6 +1948,7 @@ struct module *module_get_kallsym(unsigned int symnum,
 	struct module *mod;
 
 	down(&module_mutex);
+        /* 扫描内核当中的所有模块 */
 	list_for_each_entry(mod, &modules, list) {
 		if (symnum < mod->num_symtab) {
 			*value = mod->symtab[symnum].st_value;

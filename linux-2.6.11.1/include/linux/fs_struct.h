@@ -4,10 +4,12 @@
 struct dentry;
 struct vfsmount;
 
+/* 进程的文件系统结构 */
 struct fs_struct {
 	atomic_t count;
 	rwlock_t lock;
 	int umask;
+        /* root，pwd对应的目录指针和目录所在文件系统的挂载点 */
 	struct dentry * root, * pwd, * altroot;
 	struct vfsmount * rootmnt, * pwdmnt, * altrootmnt;
 };

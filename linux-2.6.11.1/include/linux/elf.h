@@ -247,6 +247,7 @@ typedef struct elf64_sym {
 
 #define EI_NIDENT	16
 
+/* 32位elf可执行文件头部 */
 typedef struct elf32_hdr{
   unsigned char	e_ident[EI_NIDENT];
   Elf32_Half	e_type;
@@ -267,18 +268,23 @@ typedef struct elf32_hdr{
 /* elf64位可执行文件的头部 */
 typedef struct elf64_hdr {
   unsigned char	e_ident[16];		/* ELF "magic number" */
-  Elf64_Half e_type;
+  Elf64_Half e_type;             /* 目标文件类型 */
   Elf64_Half e_machine;
   Elf64_Word e_version;
-  Elf64_Addr e_entry;		/* Entry point virtual address */
+  Elf64_Addr e_entry;		 /* 可执行文件入口地址 */ /* Entry point virtual address */
   Elf64_Off e_phoff;		/* Program header table file offset */
   Elf64_Off e_shoff;		/* Section header table file offset */
   Elf64_Word e_flags;
-  Elf64_Half e_ehsize;
-  Elf64_Half e_phentsize;
-  Elf64_Half e_phnum;
+  Elf64_Half e_ehsize;  /* 该数据结构一字节为单位的实际大小 */
+  Elf64_Half e_phentsize;  /* program header的大小 */
+  Elf64_Half e_phnum;      /* program header entry的数量 */
   Elf64_Half e_shentsize;
   Elf64_Half e_shnum;
+  /* 在Section header table中有一个特殊的entry，
+    * 它定义了Section header table中各个entry的名字，
+    * e_shstrndx用于指示这个特殊的entry在Section header table中的索引，即它在第几个entry， 
+    * 这个特殊的entry称为section name string table。
+    */
   Elf64_Half e_shstrndx;
 } Elf64_Ehdr;
 
@@ -299,22 +305,29 @@ typedef struct elf32_phdr{
   Elf32_Word	p_align;
 } Elf32_Phdr;
 
+/* 用这个数据结构可以找到每个segment在文件中的位置 */
 typedef struct elf64_phdr {
   Elf64_Word p_type;
   Elf64_Word p_flags;
   Elf64_Off p_offset;		/* Segment file offset */
+  /* 在内存当中的线性地址 */
   Elf64_Addr p_vaddr;		/* Segment virtual address */
+  /* 物理内存的地址 */
   Elf64_Addr p_paddr;		/* Segment physical address */
+  /* p_filesz指示Program header所指的Segment在文件中的大小。
+    * p_memsz指示Program header所指的Segment在内存中的大小，
+    * 一般地，p_memsz>=p_filesz，对p_filesz不足的内存区域填0。 
+    */ 
   Elf64_Xword p_filesz;		/* Segment size in file */
   Elf64_Xword p_memsz;		/* Segment size in memory */
   Elf64_Xword p_align;		/* Segment alignment, file & memory */
 } Elf64_Phdr;
 
 /* sh_type */
-#define SHT_NULL	0
-#define SHT_PROGBITS	1
-#define SHT_SYMTAB	2
-#define SHT_STRTAB	3
+#define SHT_NULL	0         /* 表示段头表无效，不占用文件空间 */
+#define SHT_PROGBITS	1 /* 表示该段包含程序指令 */
+#define SHT_SYMTAB	2   /* 表示该段包含重定位符号表 */
+#define SHT_STRTAB	3   /* 包含字符表 */
 #define SHT_RELA	4
 #define SHT_HASH	5
 #define SHT_DYNAMIC	6
@@ -358,15 +371,26 @@ typedef struct {
 } Elf32_Shdr;
 
 typedef struct elf64_shdr {
+  /* 在section name string table当中的索引 */
   Elf64_Word sh_name;		/* Section name, index in string tbl */
+  /* 表明段的类型 */
   Elf64_Word sh_type;		/* Type of section */
   Elf64_Xword sh_flags;		/* Miscellaneous section attributes */
+  /* 表明当前段在内存当中的起始线性地址 */
   Elf64_Addr sh_addr;		/* Section virtual addr at execution */
+  /* 当前段在文件中的偏移量 */
   Elf64_Off sh_offset;		/* Section file offset */
+  /* 当前段在文件中占用的字节数 */
   Elf64_Xword sh_size;		/* Size of section in bytes */
+  /* 一下两个供连接器使用 */
   Elf64_Word sh_link;		/* Index of another section */
   Elf64_Word sh_info;		/* Additional section information */
+  /* 指示sh_addr的对齐要求 */
   Elf64_Xword sh_addralign;	/* Section alignment */
+  /* 有一些特殊的section，它内部仍然包含多个entry，
+    * 每个entry大小相同，如symbol table，sh_entsize用于
+    * 指示这个特殊的section中每个entry的大小。 
+    */ 
   Elf64_Xword sh_entsize;	/* Entry size if section holds table */
 } Elf64_Shdr;
 
