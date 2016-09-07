@@ -47,6 +47,14 @@ void __init proc_root_init(void)
 	err = register_filesystem(&proc_fs_type);
 	if (err)
 		return;
+        /* 挂在完成之后，并不能通过路径名'/proc'找到
+          * proc文件系统的根节点，光是kern_mount还不够 
+          * 还需要系统的初始化进程从内核外部通过系统调用mount 
+          * 来在安装一次 
+          * mount -nvt proc /dev/null /proc 
+          * 就是说建立在空设备上 '/dev/null'的proc文件系统安装在节点上 
+          * 从理论上讲可以将其安装到其他节点上，但实际总是安装到/proc上 
+          */
 	proc_mnt = kern_mount(&proc_fs_type);
 	err = PTR_ERR(proc_mnt);
 	if (IS_ERR(proc_mnt)) {

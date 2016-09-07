@@ -814,7 +814,9 @@ do_kern_mount(const char *fstype, int flags, const char *name, void *data)
 	if (!type)
 		return ERR_PTR(-ENODEV);
 
-        /* 分配一个虚拟挂载点，如sysfs文件系统，则此处的name就是sysfs */
+	/* 分配一个虚拟挂载点，如sysfs文件系统，则此处的name就是sysfs,
+	  * 如果是普通文件系统则是路径 
+	  */
 	mnt = alloc_vfsmnt(name);
 	if (!mnt)
 		goto out;

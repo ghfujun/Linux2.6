@@ -1155,6 +1155,7 @@ out:
 	return -ENOMEM;
 }
 
+/* 系统挂在函数 */
 asmlinkage long sys_mount(char __user * dev_name, char __user * dir_name,
 			  char __user * type, unsigned long flags,
 			  void __user * data)

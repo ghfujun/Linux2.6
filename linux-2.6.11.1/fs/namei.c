@@ -641,7 +641,7 @@ struct path {
  *  It _is_ time-critical.
  */
 
-/* 开� ? 正�  � � ?�� ?*/
+/* 从nd当中的起点开始查找名称为name的子路径 ，然后将自路径的结果放在path当中 */
 static int do_lookup(struct nameidata *nd, struct qstr *name,
 		     struct path *path)
 {
@@ -683,6 +683,7 @@ fail:
  *
  * We expect 'base' to be positive and a directory.
  */
+/* 表示从nd当中的目录为起点查找name路径 */
 int fastcall link_path_walk(const char * name, struct nameidata *nd)
 {
 	struct path next;
@@ -954,7 +955,7 @@ set_it:
 	}
 }
 
-/* ?�� ?ame? � ? � �  */
+/* 根据路径来查找文件  */
 int fastcall path_lookup(const char *name, unsigned int flags, struct nameidata *nd)
 {
 	int retval;
@@ -1378,7 +1379,7 @@ int open_namei(const char * pathname, int flag, int mode, struct nameidata *nd)
 	/*
 	 * The simplest case - just a plain lookup.
 	 */
-        /* � ? 没�  使� ��  建�  记�?� 就�  � � ?�就� ? �? */
+        /*  如果是文件不存在则创建文件的标记 */
 	if (!(flag & O_CREAT)) {
 		error = path_lookup(pathname, lookup_flags(flag)|LOOKUP_OPEN, nd);
 		if (error)
