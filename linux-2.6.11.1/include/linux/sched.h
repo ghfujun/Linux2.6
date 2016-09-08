@@ -394,9 +394,12 @@ struct signal_struct {
 /*
  * Some day this will be a full-fledged user tracking system..
  */
+/* 关于每个用户信息的数据结构 */
 struct user_struct {
 	atomic_t __count;	/* reference count */
+        /* 该用户拥有的进程数量 */
 	atomic_t processes;	/* How many processes does this user have? */
+        /* 该用户已经打开了多少文件 */
 	atomic_t files;		/* How many open files does this user have? */
 	atomic_t sigpending;	/* How many pending signals does this user have? */
 	/* protected by mq_lock	*/
@@ -410,7 +413,7 @@ struct user_struct {
 
 	/* Hash table maintenance information */
 	struct list_head uidhash_list;
-	uid_t uid;
+	uid_t uid;          /* 用户id */
 };
 
 extern struct user_struct *find_user(uid_t);
@@ -524,7 +527,7 @@ void exit_io_context(void);
 #define NGROUPS_PER_BLOCK	((int)(PAGE_SIZE / sizeof(gid_t)))
 struct group_info {
 	int ngroups;
-	atomic_t usage;
+	atomic_t usage; /* 引用计数 */
 	gid_t small_block[NGROUPS_SMALL];
 	int nblocks;
 	gid_t *blocks[0];
@@ -561,7 +564,9 @@ struct task_struct {
 	volatile long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
 	struct thread_info *thread_info;
 	atomic_t usage;
+        /* 每个进程的创建标记 */
 	unsigned long flags;	/* per process flags, defined below */
+        /* 表示进程是否被跟踪 */
 	unsigned long ptrace;
 
 	int lock_depth;		/* Lock depth */
@@ -613,6 +618,7 @@ struct task_struct {
 	 * older sibling, respectively.  (p->father can be replaced with 
 	 * p->parent->pid)
 	 */
+        /* 进程的真正父进程 */
 	struct task_struct *real_parent; /* real parent process (when being debugged) */
 	struct task_struct *parent;	/* parent process */
 	/*
@@ -621,6 +627,7 @@ struct task_struct {
 	 */
 	struct list_head children;	/* list of my children */
 	struct list_head sibling;	/* linkage in my parent's children list */
+        /* 指向线程组的组长 */
 	struct task_struct *group_leader;	/* threadgroup leader */
 
 	/* PID/PID hash table linkage. */
@@ -646,6 +653,7 @@ struct task_struct {
 	struct group_info *group_info;
 	kernel_cap_t   cap_effective, cap_inheritable, cap_permitted;
 	unsigned keep_capabilities:1;
+        /* 进程对应的用户信息 */
 	struct user_struct *user;
 #ifdef CONFIG_KEYS
 	struct key *session_keyring;	/* keyring inherited over fork */
@@ -658,6 +666,7 @@ struct task_struct {
 /* file system info */
 	int link_count, total_link_count;
 /* ipc stuff */
+        /* 进程的信号量数据 */
 	struct sysv_sem sysvsem;
 /* CPU-specific state of this task */
 	struct thread_struct thread;
@@ -706,6 +715,7 @@ struct task_struct {
 /* VM state */
 	struct reclaim_state *reclaim_state;
 
+        /* 进程proc文件系统的目录 */
 	struct dentry *proc_dentry;
 	struct backing_dev_info *backing_dev_info;
 
@@ -869,6 +879,7 @@ extern struct task_struct init_task;
 
 extern struct   mm_struct init_mm;
 
+/* 根据常规的进程id来查找进程的task_struct */
 #define find_task_by_pid(nr)	find_task_by_pid_type(PIDTYPE_PID, nr)
 extern struct task_struct *find_task_by_pid_type(int type, int pid);
 extern void set_special_pids(pid_t session, pid_t pgrp);

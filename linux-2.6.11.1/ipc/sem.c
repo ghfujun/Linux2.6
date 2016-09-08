@@ -928,6 +928,9 @@ static inline void unlock_semundo(void)
  *
  * This can block, so callers must hold no locks.
  */
+/* 将当前进程的undo_list给拷贝过来，仅仅是拷贝了指针
+  * 如果当前进程没有，则是一个空的列表 
+  */
 static inline int get_undo_list(struct sem_undo_list **undo_listp)
 {
 	struct sem_undo_list *undo_list;
@@ -1222,11 +1225,15 @@ asmlinkage long sys_semop (int semid, struct sembuf __user *tsops, unsigned nsop
  * because of the reasoning in the comment above unlock_semundo.
  */
 
+/* 复制进程当前所有没有undo的信号量 */
 int copy_semundo(unsigned long clone_flags, struct task_struct *tsk)
 {
 	struct sem_undo_list *undo_list;
 	int error;
 
+        /* 如果是拷贝进程的信号量，其实也就是和当前进程
+          * 共享没有undo的信号列表
+          */
 	if (clone_flags & CLONE_SYSVSEM) {
 		error = get_undo_list(&undo_list);
 		if (error)

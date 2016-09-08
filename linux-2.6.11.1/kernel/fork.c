@@ -446,6 +446,7 @@ static int copy_mm(unsigned long clone_flags, struct task_struct * tsk)
 	if (!oldmm)
 		return 0;
 
+        /* 是否共享内存结构，如果共享，则直接增加应用计数 */
 	if (clone_flags & CLONE_VM) {
 		atomic_inc(&oldmm->mm_users);
 		mm = oldmm;
@@ -569,6 +570,7 @@ static int copy_files(unsigned long clone_flags, struct task_struct * tsk)
 	if (!oldf)
 		goto out;
 
+        /* 如果是共享进程的文件信息，则直接增加引用计数即可 */
 	if (clone_flags & CLONE_FILES) {
 		atomic_inc(&oldf->count);
 		goto out;
@@ -597,6 +599,7 @@ static int copy_files(unsigned long clone_flags, struct task_struct * tsk)
 
 	spin_lock(&oldf->file_lock);
 
+        /* 获取当前进程文件打开的数量 */
 	open_files = count_open_files(oldf, oldf->max_fdset);
 	expand = 0;
 
@@ -721,6 +724,11 @@ static inline int copy_sighand(unsigned long clone_flags, struct task_struct * t
 	return 0;
 }
 
+/* 信号是发送给进程的，但是在某些情况下，一个进程可能有多个
+  * 内核线程(轻量级进程)，当给这个进程发送退出信号时， 
+  * 那么进程下面的所有内核线程都要接受信号并退出，而进程中的 
+  * 所有线程被称为一个线程组  
+  */
 static inline int copy_signal(unsigned long clone_flags, struct task_struct * tsk)
 {
 	struct signal_struct *sig;
@@ -762,10 +770,12 @@ static inline int copy_signal(unsigned long clone_flags, struct task_struct * ts
 	return 0;
 }
 
+/* 设置新进程的创建标记 */
 static inline void copy_flags(unsigned long clone_flags, struct task_struct *p)
 {
 	unsigned long new_flags = p->flags;
 
+        /* 默认是没有超级用户特权，同时是通过fork创建的，并不是exec来的 */
 	new_flags &= ~PF_SUPERPRIV;
 	new_flags |= PF_FORKNOEXEC;
 	if (!(clone_flags & CLONE_PTRACE))
@@ -819,6 +829,7 @@ static task_t *copy_process(unsigned long clone_flags,
 	if ((clone_flags & CLONE_SIGHAND) && !(clone_flags & CLONE_VM))
 		return ERR_PTR(-EINVAL);
 
+        /* 对安全性进行判断 */
 	retval = security_task_create(clone_flags);
 	if (retval)
 		goto fork_out;
@@ -831,12 +842,14 @@ static task_t *copy_process(unsigned long clone_flags,
 	retval = -EAGAIN;
 	if (atomic_read(&p->user->processes) >=
 			p->signal->rlim[RLIMIT_NPROC].rlim_cur) {
+                /* 权限判断 */
 		if (!capable(CAP_SYS_ADMIN) && !capable(CAP_SYS_RESOURCE) &&
 				p->user != &root_user)
 			goto bad_fork_free;
 	}
 
 	atomic_inc(&p->user->__count);
+        /* 增加用户的进程数量 */
 	atomic_inc(&p->user->processes);
 	get_group_info(p->group_info);
 
@@ -879,6 +892,7 @@ static task_t *copy_process(unsigned long clone_flags,
 	p->it_virt_incr = cputime_zero;
 	p->it_prof_value = cputime_zero;
 	p->it_prof_incr = cputime_zero;
+        /* 初始化进程的时钟结构和时钟的数据  */
 	init_timer(&p->real_timer);
 	p->real_timer.data = (unsigned long) p;
 
@@ -906,6 +920,10 @@ static task_t *copy_process(unsigned long clone_flags,
 #endif
 
 	p->tgid = p->pid;
+        /* 如果是相同的线程组，则线程的线程的线程组id相同，
+          * 如果不是相同的线程组，则当前进程的线程组id就是进程的pid 
+          * 注意上面说到的线程对内核来说其实就是进程，也就是轻量级进程 
+          */
 	if (clone_flags & CLONE_THREAD)
 		p->tgid = current->tgid;
 
@@ -1139,6 +1157,7 @@ long do_fork(unsigned long clone_flags,
 {
 	struct task_struct *p;
 	int trace = 0;
+        /* 分配一个新的进程ID */
 	long pid = alloc_pidmap();
 
 	if (pid < 0)

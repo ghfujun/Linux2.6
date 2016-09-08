@@ -4,9 +4,9 @@
 enum pid_type
 {
 	PIDTYPE_PID,
-	PIDTYPE_TGID,
-	PIDTYPE_PGID,
-	PIDTYPE_SID,
+	PIDTYPE_TGID,    /* 代表一组线程组 */
+	PIDTYPE_PGID,     /* 代表一组进程描述符 */
+	PIDTYPE_SID,        /* 代表一个会话的描述符 */
 	PIDTYPE_MAX
 };
 
@@ -14,10 +14,11 @@ enum pid_type
 struct pid
 {
 	/* Try to keep pid_chain in the same cacheline as nr for find_pid */
-	int nr;
-	struct hlist_node pid_chain;
+	int nr;           /* 对应进程号 */
+	struct hlist_node pid_chain;              /* pid对应的hash链 */
 	/* list of pids with the same nr, only one of them is in the hash */
-	struct list_head pid_list;
+         /* 将通过type和nr映射到pid_hash中同一个位置的struct pid用pid_list连接起来 */
+	struct list_head pid_list;       
 };
 
 #define pid_task(elem, type) \

@@ -458,6 +458,7 @@ asmlinkage void __init start_kernel(void)
 	trap_init();
 	rcu_init();
 	init_IRQ();
+	/* pidhash表的初始化 */
 	pidhash_init();
 	init_timers();
 	softirq_init();
@@ -489,6 +490,7 @@ asmlinkage void __init start_kernel(void)
 	if (late_time_init)
 		late_time_init();
 	calibrate_delay();
+	/* 进程pid映射的初始化 */
 	pidmap_init();
 	pgtable_cache_init();
 	prio_tree_init();
