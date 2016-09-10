@@ -100,9 +100,11 @@ struct vfsmount *lookup_mnt(struct vfsmount *mnt, struct dentry *dentry)
 	for (;;) {
 		tmp = tmp->next;
 		p = NULL;
+                /* 表明双向链表搜索完毕 */
 		if (tmp == head)
 			break;
 		p = list_entry(tmp, struct vfsmount, mnt_hash);
+                /* 父挂载点和挂载目录相同 */
 		if (p->mnt_parent == mnt && p->mnt_mountpoint == dentry) {
 			found = mntget(p);
 			break;

@@ -554,9 +554,16 @@ int follow_up(struct vfsmount **mnt, struct dentry **dentry)
 /* no need for dcache_lock, as serialization is taken care in
  * namespace.c
  */
+/* 获取该目录下相应的挂载点
+  * mnt是输入和输出参数输入为dentry所在文件系统的挂载点， 
+  * 返回时获取挂载点的指针 
+  * dentry是输入和输出参数，如果该目录被挂载 
+  * 则传回挂载点的根目录，也就相当于是目录替换了 
+  */
 static int follow_mount(struct vfsmount **mnt, struct dentry **dentry)
 {
 	int res = 0;
+        /* 判断该目录是否被挂载 */
 	while (d_mountpoint(*dentry)) {
 		struct vfsmount *mounted = lookup_mnt(*mnt, *dentry);
 		if (!mounted)

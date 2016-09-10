@@ -119,6 +119,7 @@ struct dentry {
 	struct dcookie_struct *d_cookie; /* cookie, if any */
         /* 路径查找的hash结构 */
 	struct hlist_node d_hash;	/* lookup hash list */	
+	/* 表示该目录是否已经挂载了其他文件系统 */
 	int d_mounted;
 	unsigned char d_iname[DNAME_INLINE_LEN_MIN];	/* small names */
 };

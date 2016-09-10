@@ -24,14 +24,17 @@
 /* 文件系统挂载点结构 */
 struct vfsmount
 {
+        /* 形成全局的hash链表 */
 	struct list_head mnt_hash;
         /* 指向父文件系统，这个文件系统安装其上 */
 	struct vfsmount *mnt_parent;	/* fs we are mounted on */
+        /* 挂载点文件系统的目录，如把文件系统挂在到某个路径上，则对应的是这个路径的dentry */
 	struct dentry *mnt_mountpoint;	/* dentry of mountpoint */
-        /* 指向这个文件系统的根目录 */
+        /* 指向这个文件系统的根目录‘/' */
 	struct dentry *mnt_root;	/* root of the mounted tree */
         /* 指向文件系统的超级块 */
 	struct super_block *mnt_sb;	/* pointer to superblock */
+        /* 所有挂载在该文件系统上的vfsmount，与子挂载点的mnt_child形成双向链表 */
 	struct list_head mnt_mounts;	/* list of children, anchored here */
 	struct list_head mnt_child;	/* and going through their mnt_child */
 	atomic_t mnt_count;             /* 引用计数 */

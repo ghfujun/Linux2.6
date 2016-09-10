@@ -880,6 +880,7 @@ struct dentry * d_alloc_root(struct inode * root_inode)
 		res = d_alloc(NULL, &name);
 		if (res) {
 			res->d_sb = root_inode->i_sb;
+                        /* 根目录的父目录是自己 */
 			res->d_parent = res;
 			d_instantiate(res, root_inode);
 		}
