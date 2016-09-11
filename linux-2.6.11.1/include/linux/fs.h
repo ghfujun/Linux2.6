@@ -582,9 +582,9 @@ struct file_ra_state {
 
 /* file文件结构 */
 struct file {
-	struct list_head	f_list;
+	struct list_head	f_list;            /* 链接一个超级块中所有的file结构 */
 	struct dentry		*f_dentry;       /* 文件对应的目录指针 */
-	struct vfsmount         *f_vfsmnt;
+	struct vfsmount         *f_vfsmnt;   /* 文件所在文件系统的挂载点 */
 	struct file_operations	*f_op;
 	atomic_t		f_count;	  /* 文件的引用计数 */
 	unsigned int 		f_flags;

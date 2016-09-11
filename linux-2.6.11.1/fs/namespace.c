@@ -47,6 +47,7 @@ static int hash_mask, hash_bits;
 /* 专门用来分配struct vfsmount 的cache */
 static kmem_cache_t *mnt_cache; 
 
+/* 根据挂载点指针和挂载点对应的文件系统中的dentry指针来hash一个索引 */
 static inline unsigned long hash(struct vfsmount *mnt, struct dentry *dentry)
 {
 	unsigned long tmp = ((unsigned long) mnt / L1_CACHE_BYTES);
@@ -90,6 +91,7 @@ void free_vfsmnt(struct vfsmount *mnt)
  * Now, lookup_mnt increments the ref count before returning
  * the vfsmount struct.
  */
+/* 根据挂载点和挂载点文件系统中的目录来查找挂载到dentry目录上的挂载点 */
 struct vfsmount *lookup_mnt(struct vfsmount *mnt, struct dentry *dentry)
 {
 	struct list_head * head = mount_hashtable + hash(mnt, dentry);
@@ -1014,6 +1016,7 @@ int copy_mount_options(const void __user *data, unsigned long *where)
  * Therefore, if this magic number is present, it carries no information
  * and must be discarded.
  */
+/* 内核的真正挂载函数 */
 long do_mount(char * dev_name, char * dir_name, char *type_page,
 		  unsigned long flags, void *data_page)
 {
@@ -1204,6 +1207,11 @@ out1:
  * Replace the fs->{rootmnt,root} with {mnt,dentry}. Put the old values.
  * It can block. Requires the big lock held.
  */
+/* 设置当前进程的对应文件系统的根目录dentry，也就是绝对路径查找时
+  * 从哪个目录开始，以及跟目录所在文件系统的挂载点，为什么总是要有挂载点这个指针 
+  * 因为挂载点对应的跟目录系统是文件系统的实际情况，用户可以通过系统调用来更改进程的跟目录 
+  * 也可以把更改过后的根目录给改回去 
+  */
 void set_fs_root(struct fs_struct *fs, struct vfsmount *mnt,
 		 struct dentry *dentry)
 {

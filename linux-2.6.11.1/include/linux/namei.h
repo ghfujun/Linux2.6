@@ -14,7 +14,7 @@ enum { MAX_NESTED_LINKS = 5 };
 
 struct nameidata {
 	struct dentry	*dentry;          /* 从哪个目录开始查找的 */
-	struct vfsmount *mnt;           /* 路径的挂载点 */
+	struct vfsmount *mnt;           /* 文件系统给的挂载点 */
 	struct qstr	last;
 	unsigned int	flags;
 	int		last_type;

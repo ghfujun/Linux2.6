@@ -515,6 +515,7 @@ asmlinkage long sys_access(const char __user * filename, int mode)
 	return res;
 }
 
+/* 更改进程工作目录 */
 asmlinkage long sys_chdir(const char __user * filename)
 {
 	struct nameidata nd;
@@ -536,6 +537,7 @@ out:
 	return error;
 }
 
+/* 更改进程的工作目录 */
 asmlinkage long sys_fchdir(unsigned int fd)
 {
 	struct file *file;
@@ -566,6 +568,7 @@ out:
 	return error;
 }
 
+/* 更改当前进程的根目录 */
 asmlinkage long sys_chroot(const char __user * filename)
 {
 	struct nameidata nd;
@@ -771,6 +774,9 @@ struct file *filp_open(const char * filename, int flags, int mode)
 
 EXPORT_SYMBOL(filp_open);
 
+/* 通过目录来从新打开文件，dentry仅仅是表示了文件系统中文件的信息，
+  * 而真正的文件操作信息都存放在file指针当中
+  */
 struct file *dentry_open(struct dentry *dentry, struct vfsmount *mnt, int flags)
 {
 	struct file * f;
