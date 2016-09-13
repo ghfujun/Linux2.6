@@ -174,12 +174,14 @@ EXPORT_SYMBOL(fget);
  * and a flag is returned to be passed to the corresponding fput_light().
  * There must not be a cloning between an fget_light/fput_light pair.
  */
+/* 第二个参数表示是否需要释放file的引用计数 */
 struct file fastcall *fget_light(unsigned int fd, int *fput_needed)
 {
 	struct file *file;
 	struct files_struct *files = current->files;
 
 	*fput_needed = 0;
+        /* 如果当前file的引用计数为1，则是新建的file结构，不需要和别人共享file结构  */
 	if (likely((atomic_read(&files->count) == 1))) {
 		file = fcheck_files(files, fd);
 	} else {

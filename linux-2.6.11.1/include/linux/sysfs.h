@@ -15,6 +15,7 @@
 struct kobject;
 struct module;
 
+/* 内核对象的属性结构 */
 struct attribute {
 	char			* name;
 	struct module 		* owner;

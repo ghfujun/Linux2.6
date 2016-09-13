@@ -219,11 +219,15 @@ ssize_t do_sync_read(struct file *filp, char __user *buf, size_t len, loff_t *pp
 
 EXPORT_SYMBOL(do_sync_read);
 
-/* VFS文件系统的读操作 */
+/* VFS文件系统的读操作
+  * pos表示从文件的偏移位置开始处读取 
+  * count表示读取数量  
+  */
 ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
 {
 	ssize_t ret;
 
+        /* 判断是否可读 */
 	if (!(file->f_mode & FMODE_READ))
 		return -EBADF;
 	if (!file->f_op || (!file->f_op->read && !file->f_op->aio_read))
@@ -235,6 +239,7 @@ ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
 	if (!ret) {
 		ret = security_file_permission (file, MAY_READ);
 		if (!ret) {
+                        /* 如果没有正常的*/
 			if (file->f_op->read)
 				ret = file->f_op->read(file, buf, count, pos);
 			else

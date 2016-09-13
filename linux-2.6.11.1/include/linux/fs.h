@@ -590,7 +590,7 @@ struct file {
 	unsigned int 		f_flags;
 	mode_t			f_mode;
 	int			f_error;
-	loff_t			f_pos;
+	loff_t			f_pos;            /* 文件读取的偏移位置 */
 	struct fown_struct	f_owner;
 	unsigned int		f_uid, f_gid;
 	struct file_ra_state	f_ra;

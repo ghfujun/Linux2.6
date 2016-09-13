@@ -1065,6 +1065,7 @@ static int mod_sysfs_setup(struct module *mod,
 {
 	int err;
 
+	/* 清空模块内核对象的数据 */
 	memset(&mod->mkobj.kobj, 0, sizeof(mod->mkobj.kobj));
 	err = kobject_set_name(&mod->mkobj.kobj, "%s", mod->name);
 	if (err)
@@ -1741,6 +1742,7 @@ static struct module *load_module(void __user *umod,
 	if (err < 0)
 		goto arch_cleanup;
 
+	/* 将模块和/sys/module目录关联 */
 	err = mod_sysfs_setup(mod, 
 			      (struct kernel_param *)
 			      sechdrs[setupindex].sh_addr,

@@ -31,14 +31,15 @@
 /* counter to tag the hotplug event, read only except for the kobject core */
 extern u64 hotplug_seqnum;
 
+/* 内核对象结构 */
 struct kobject {
-	char			* k_name;
-	char			name[KOBJ_NAME_LEN];
+	char			* k_name;  /* 内核对象名称 */
+	char			name[KOBJ_NAME_LEN];    /* */
 	struct kref		kref;
-	struct list_head	entry;
+	struct list_head	entry;            /* 和kset中的list形成链表 */
 	struct kobject		* parent;
-	struct kset		* kset;
-	struct kobj_type	* ktype;
+	struct kset		* kset;               /* 指向所属的kset */
+	struct kobj_type	* ktype;        /* 记录kobject类型 */
 	struct dentry		* dentry;
 };
 
@@ -66,10 +67,11 @@ extern void kobject_put(struct kobject *);
 
 extern char * kobject_get_path(struct kobject *, int);
 
+/* 内核对象类型结构 */
 struct kobj_type {
-	void (*release)(struct kobject *);
-	struct sysfs_ops	* sysfs_ops;
-	struct attribute	** default_attrs;
+	void (*release)(struct kobject *);         /* 内核对象的释放函数 */
+	struct sysfs_ops	* sysfs_ops;      /* sysfs文件操作 */
+	struct attribute	** default_attrs;  /* 内核对象的默认属性 */
 };
 
 
@@ -99,10 +101,10 @@ struct kset_hotplug_ops {
 };
 
 struct kset {
-	struct subsystem	* subsys;
+	struct subsystem	* subsys;       /* 对应的子系统 */
 	struct kobj_type	* ktype;
-	struct list_head	list;
-	struct kobject		kobj;
+	struct list_head	list;     /* 形成kobject的链表 */
+	struct kobject		kobj;    /* */
 	struct kset_hotplug_ops	* hotplug_ops;
 };
 
@@ -112,11 +114,13 @@ extern int kset_add(struct kset * k);
 extern int kset_register(struct kset * k);
 extern void kset_unregister(struct kset * k);
 
+/* 获取kobject对应的kset */
 static inline struct kset * to_kset(struct kobject * kobj)
 {
 	return kobj ? container_of(kobj,struct kset,kobj) : NULL;
 }
 
+/* 相当于给kset中的kobject增加了引用计数 */
 static inline struct kset * kset_get(struct kset * k)
 {
 	return k ? to_kset(kobject_get(&k->kobj)) : NULL;

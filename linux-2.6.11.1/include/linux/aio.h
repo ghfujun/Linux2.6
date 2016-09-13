@@ -50,7 +50,7 @@ struct kiocb {
 	int			ki_users;
 	unsigned		ki_key;		/* id of this request */
 
-	struct file		*ki_filp;
+	struct file		*ki_filp;           /* 操作对应的文件指针 */
 	struct kioctx		*ki_ctx;	/* may be NULL for sync ops */
 	int			(*ki_cancel)(struct kiocb *, struct io_event *);
 	ssize_t			(*ki_retry)(struct kiocb *);
@@ -64,7 +64,7 @@ struct kiocb {
 		struct task_struct	*tsk;
 	} ki_obj;
 	__u64			ki_user_data;	/* user's data for completion */
-	loff_t			ki_pos;
+	loff_t			ki_pos;             /* 读取偏移位置 */
 	/* State that we remember to be able to restart/retry  */
 	unsigned short		ki_opcode;
 	size_t			ki_nbytes; 	/* copy of iocb->aio_nbytes */

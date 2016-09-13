@@ -161,6 +161,7 @@ int kobject_add(struct kobject * kobj)
 		return -ENOENT;
 	if (!kobj->k_name)
 		kobj->k_name = kobj->name;
+	/* 增加父kobject的引用计数 */
 	parent = kobject_get(kobj->parent);
 
 	pr_debug("kobject %s: registering. parent: %s, set: %s\n",
@@ -170,6 +171,7 @@ int kobject_add(struct kobject * kobj)
 	if (kobj->kset) {
 		down_write(&kobj->kset->subsys->rwsem);
 
+		/* 如果父为空，则获取对应kset的kobj */
 		if (!parent)
 			parent = kobject_get(&kobj->kset->kobj);
 
@@ -197,6 +199,7 @@ int kobject_add(struct kobject * kobj)
  *	@kobj:	object in question.
  */
 
+/* 注册内核对象，也就是将kobject添加到kset当中 */
 int kobject_register(struct kobject * kobj)
 {
 	int error = 0;
@@ -224,6 +227,7 @@ int kobject_register(struct kobject * kobj)
  *	@kobj->name array.
  */
 
+/* 设置内核模块的名称 */
 int kobject_set_name(struct kobject * kobj, const char * fmt, ...)
 {
 	int error = 0;
@@ -263,6 +267,7 @@ int kobject_set_name(struct kobject * kobj, const char * fmt, ...)
 	}
 
 	/* Free the old name, if necessary. */
+	/* 释放原来老的名称 */
 	if (kobj->k_name && kobj->k_name != kobj->name)
 		kfree(kobj->k_name);
 
@@ -323,6 +328,7 @@ void kobject_unregister(struct kobject * kobj)
  *	@kobj:	object.
  */
 
+/* 增加内核对象的引用计数 */
 struct kobject * kobject_get(struct kobject * kobj)
 {
 	if (kobj)

@@ -54,6 +54,7 @@ struct module_attribute {
 			 const char *, size_t count);
 };
 
+/* 模块的内核对象结构，一般会以/sys/modules目录的形式变现出来 */
 struct module_kobject
 {
 	struct kobject kobj;

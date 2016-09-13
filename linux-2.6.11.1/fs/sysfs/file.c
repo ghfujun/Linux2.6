@@ -376,6 +376,7 @@ int sysfs_add_file(struct dentry * dir, const struct attribute * attr, int type)
  *	@attr:	atrribute descriptor.
  */
 
+/* 在sys文件系统中给kobject创建一个目录 */
 int sysfs_create_file(struct kobject * kobj, const struct attribute * attr)
 {
 	BUG_ON(!kobj || !kobj->dentry || !attr);
