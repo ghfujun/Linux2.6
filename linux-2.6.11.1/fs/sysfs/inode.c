@@ -26,6 +26,7 @@ static struct backing_dev_info sysfs_backing_dev_info = {
 	.memory_backed	= 1,	/* Does not contribute to dirty memory */
 };
 
+/* 创建sysfs的inode */
 struct inode * sysfs_new_inode(mode_t mode)
 {
 	struct inode * inode = new_inode(sysfs_sb);
@@ -42,6 +43,7 @@ struct inode * sysfs_new_inode(mode_t mode)
 	return inode;
 }
 
+/* 创建目录对应的inode */
 int sysfs_create(struct dentry * dentry, int mode, int (*init)(struct inode *))
 {
 	int error = 0;
@@ -76,6 +78,7 @@ int sysfs_create(struct dentry * dentry, int mode, int (*init)(struct inode *))
 	return error;
 }
 
+/* 在父目录中创建一个名称为name的目录，并返回 */
 struct dentry * sysfs_get_dentry(struct dentry * parent, const char * name)
 {
 	struct qstr qstr;

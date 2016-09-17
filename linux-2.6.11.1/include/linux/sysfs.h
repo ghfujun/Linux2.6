@@ -66,14 +66,15 @@ struct sysfs_ops {
 	ssize_t	(*store)(struct kobject *,struct attribute *,const char *, size_t);
 };
 
+/* sysfs文件系统目录结构 */
 struct sysfs_dirent {
 	atomic_t		s_count;
-	struct list_head	s_sibling;
-	struct list_head	s_children;
-	void 			* s_element;
+	struct list_head	s_sibling;          /* 兄弟链表 */
+	struct list_head	s_children;      /* 子目录链表 */
+	void 			* s_element;           /* 如果是内核模块，则指向的是内核对象 */
 	int			s_type;
 	umode_t			s_mode;
-	struct dentry		* s_dentry;
+	struct dentry		* s_dentry;          /* 对应通用的目录项 */
 };
 
 #define SYSFS_ROOT		0x0001

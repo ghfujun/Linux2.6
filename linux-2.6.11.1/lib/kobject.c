@@ -43,6 +43,7 @@ static int populate_dir(struct kobject * kobj)
 	return error;
 }
 
+/* 根据内核对象来创建一个sysfs目录 */
 static int create_dir(struct kobject * kobj)
 {
 	int error = 0;
@@ -119,10 +120,16 @@ char *kobject_get_path(struct kobject *kobj, int gfp_mask)
  *	kobject_init - initialize object.
  *	@kobj:	object in question.
  */
+/* 内核对象初始化 */
 void kobject_init(struct kobject * kobj)
 {
+        /* 设置引用计数为1 */
 	kref_init(&kobj->kref);
+        /* 不接入任何双向链表 */
 	INIT_LIST_HEAD(&kobj->entry);
+        /* 增加对应kset中内嵌对象的引用计数，
+          * 如果kset为NULL则不做任何处理
+          */
 	kobj->kset = kset_get(kobj->kset);
 }
 
@@ -152,6 +159,7 @@ static void unlink(struct kobject * kobj)
  *	@kobj:	object.
  */
 
+/* 添加内核对象，同时也在sysfs文件系统中给内核对象创建了对应的目录  */
 int kobject_add(struct kobject * kobj)
 {
 	int error = 0;
@@ -178,8 +186,10 @@ int kobject_add(struct kobject * kobj)
 		list_add_tail(&kobj->entry,&kobj->kset->list);
 		up_write(&kobj->kset->subsys->rwsem);
 	}
+        /* 重新设置kobject的parent属性 */
 	kobj->parent = parent;
 
+        /* 在sysfs中创建目录 */
 	error = create_dir(kobj);
 	if (error) {
 		/* unlink does the kobject_put() for us */
@@ -353,12 +363,15 @@ void kobject_cleanup(struct kobject * kobj)
 	kobj->k_name = NULL;
 	if (t && t->release)
 		t->release(kobj);
+	/* 释放set当中的引用计数 */
 	if (s)
 		kset_put(s);
+	/* 释放父对象的引用计数 */
 	if (parent) 
 		kobject_put(parent);
 }
 
+/* 如果内核对象的引用计数为0，则需要释放该内核对象 */
 static void kobject_release(struct kref *kref)
 {
 	kobject_cleanup(container_of(kref, struct kobject, kref));
@@ -382,8 +395,10 @@ void kobject_put(struct kobject * kobj)
  *	@k:	kset 
  */
 
+/* kset初始化 */
 void kset_init(struct kset * k)
 {
+        /* 先对内嵌对象 进行初始化 */
 	kobject_init(&k->kobj);
 	INIT_LIST_HEAD(&k->list);
 }
@@ -429,6 +444,7 @@ int kset_register(struct kset * k)
  *	@k:	kset.
  */
 
+/* 内核级反注册 */
 void kset_unregister(struct kset * k)
 {
 	kobject_unregister(&k->kobj);
@@ -462,7 +478,7 @@ struct kobject * kset_find_obj(struct kset * kset, const char * name)
 	return ret;
 }
 
-
+/* 子系统初始化 */
 void subsystem_init(struct subsystem * s)
 {
 	init_rwsem(&s->rwsem);
@@ -478,6 +494,7 @@ void subsystem_init(struct subsystem * s)
  *	the rwsem. 
  */
 
+/* 子系统注册 */
 int subsystem_register(struct subsystem * s)
 {
 	int error;
@@ -492,6 +509,7 @@ int subsystem_register(struct subsystem * s)
 	return error;
 }
 
+/* 反注册子系统 */
 void subsystem_unregister(struct subsystem * s)
 {
 	pr_debug("subsystem %s: unregistering\n",s->kset.kobj.name);

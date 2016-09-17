@@ -93,6 +93,7 @@ struct kobj_type {
  *      reported, as well as to add its own "data" elements to the
  *      environment being passed to the hotplug helper.
  */
+/* 热插拔操作符 */
 struct kset_hotplug_ops {
 	int (*filter)(struct kset *kset, struct kobject *kobj);
 	char *(*name)(struct kset *kset, struct kobject *kobj);
@@ -100,11 +101,17 @@ struct kset_hotplug_ops {
 			int num_envp, char *buffer, int buffer_size);
 };
 
+/* 每个kset结构都必须属于一个struct subsystem结构 */
 struct kset {
 	struct subsystem	* subsys;       /* 对应的子系统 */
-	struct kobj_type	* ktype;
+	struct kobj_type	* ktype;        /* 对应内核对象的类型 */
 	struct list_head	list;     /* 形成kobject的链表 */
-	struct kobject		kobj;    /* */
+	/* kset内嵌的kobject不加入list链表当中，
+	  * 但是list链表当中的所有kobject的parent都 
+	  * 指向该内嵌的kobject，该内嵌的kobject的parent 
+	  * 可能指向另外一个kset的内嵌kobject 
+	  */
+	struct kobject		kobj;    
 	struct kset_hotplug_ops	* hotplug_ops;
 };
 
@@ -120,19 +127,23 @@ static inline struct kset * to_kset(struct kobject * kobj)
 	return kobj ? container_of(kobj,struct kset,kobj) : NULL;
 }
 
-/* 相当于给kset中的kobject增加了引用计数 */
+/* 相当于给kset中的kobject增加了引用计数
+  */
 static inline struct kset * kset_get(struct kset * k)
 {
 	return k ? to_kset(kobject_get(&k->kobj)) : NULL;
 }
 
+/* 释放kset中内嵌的内核对象引用计数 */
 static inline void kset_put(struct kset * k)
 {
 	kobject_put(&k->kobj);
 }
 
+/* 获取内核对象的类型 */
 static inline struct kobj_type * get_ktype(struct kobject * k)
 {
+        /* 如果对应的kset中对象类型不为空，则返回该类型 */
 	if (k->kset && k->kset->ktype)
 		return k->kset->ktype;
 	else 

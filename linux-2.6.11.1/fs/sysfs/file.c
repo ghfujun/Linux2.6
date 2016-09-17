@@ -381,6 +381,7 @@ int sysfs_create_file(struct kobject * kobj, const struct attribute * attr)
 {
 	BUG_ON(!kobj || !kobj->dentry || !attr);
 
+        /* 在内核所在对象的目录中创建基本属性文件 */
 	return sysfs_add_file(kobj->dentry, attr, SYSFS_KOBJ_ATTR);
 
 }

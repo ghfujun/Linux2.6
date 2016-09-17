@@ -77,6 +77,7 @@ void sort_extable(struct exception_table_entry *start,
 		  struct exception_table_entry *finish);
 void sort_main_extable(void);
 
+/* 内核模块子系统 */
 extern struct subsystem module_subsys;
 
 #ifdef MODULE

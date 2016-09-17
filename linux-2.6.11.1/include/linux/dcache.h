@@ -114,6 +114,9 @@ struct dentry {
 	unsigned long d_time;		/* used by d_revalidate */
 	struct dentry_operations *d_op;/* 目录操作函数 */
 	struct super_block *d_sb;	/* The root of the dentry tree */
+        /* 例如针对一些内存文件系统，如sysfs具有特定的目录结构struct sysfs_dirent，
+          * 那么对于通用的dentry目录会有一个指针指向该结构，其实两个目录是对应的 
+          */
 	void *d_fsdata;			/* fs-specific data */
  	struct rcu_head d_rcu;           /* 目录和文件的rcu结构 */
 	struct dcookie_struct *d_cookie; /* cookie, if any */

@@ -31,6 +31,9 @@ static struct dentry_operations sysfs_dentry_ops = {
 /*
  * Allocates a new sysfs_dirent and links it to the parent sysfs_dirent
  */
+/* 在sysfs中创建一个新的目录项，父目录为parent_sd ,
+  * element代表内核对象指针 
+  */
 static struct sysfs_dirent * sysfs_new_dirent(struct sysfs_dirent * parent_sd,
 						void * element)
 {
@@ -64,12 +67,14 @@ int sysfs_make_dirent(struct sysfs_dirent * parent_sd, struct dentry * dentry,
 	sd->s_dentry = dentry;
 	if (dentry) {
 		dentry->d_fsdata = sysfs_get(sd);
+                /* 设置目录操作函数集 */
 		dentry->d_op = &sysfs_dentry_ops;
 	}
 
 	return 0;
 }
 
+/* 初始化inode文件操作符 */
 static int init_dir(struct inode * inode)
 {
 	inode->i_op = &sysfs_dir_inode_operations;
@@ -93,6 +98,9 @@ static int init_symlink(struct inode * inode)
 	return 0;
 }
 
+/* 通过内核对象k，在父目录p中创建一个名称为n的目录，
+  * 并且把结果存放在d中返回 
+  */
 static int create_dir(struct kobject * k, struct dentry * p,
 		      const char * n, struct dentry ** d)
 {
@@ -133,6 +141,7 @@ int sysfs_create_subdir(struct kobject * k, const char * n, struct dentry ** d)
  *	@kobj:		object we're creating directory for. 
  */
 
+/* 根据kobject创建目录 */
 int sysfs_create_dir(struct kobject * kobj)
 {
 	struct dentry * dentry = NULL;
@@ -141,6 +150,10 @@ int sysfs_create_dir(struct kobject * kobj)
 
 	BUG_ON(!kobj);
 
+        /* 获取父对象的目录，如果父对象不为NULL，
+          * 则获取父对象对应的目录，否则是sysfs文件系统的 
+          * 根目录  
+          */
 	if (kobj->parent)
 		parent = kobj->parent->dentry;
 	else if (sysfs_mount && sysfs_mount->mnt_sb)

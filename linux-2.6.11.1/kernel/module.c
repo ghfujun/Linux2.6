@@ -1070,6 +1070,7 @@ static int mod_sysfs_setup(struct module *mod,
 	err = kobject_set_name(&mod->mkobj.kobj, "%s", mod->name);
 	if (err)
 		goto out;
+        /* 设置内核对象的kset */
 	kobj_set_kset_s(&mod->mkobj, module_subsys);
 	mod->mkobj.mod = mod;
 	err = kobject_register(&mod->mkobj.kobj);

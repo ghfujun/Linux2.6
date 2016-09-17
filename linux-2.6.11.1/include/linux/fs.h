@@ -437,7 +437,7 @@ struct inode {
 	unsigned long		i_ino;   /* i节点号 */
 	atomic_t		i_count;
 	umode_t			i_mode;
-	unsigned int		i_nlink;
+	unsigned int		i_nlink;              /* 链接的数量 */
 	uid_t			i_uid;
 	gid_t			i_gid;
 	dev_t			i_rdev;
