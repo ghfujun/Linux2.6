@@ -30,7 +30,7 @@ struct vfsmount
 	struct vfsmount *mnt_parent;	/* fs we are mounted on */
         /* 挂载点文件系统的目录，如把文件系统挂在到某个路径上，则对应的是这个路径的dentry */
 	struct dentry *mnt_mountpoint;	/* dentry of mountpoint */
-        /* 指向这个文件系统的根目录‘/' */
+        /* 指向这个文件系统的根目录‘/' ，有时并不是'/'这个目录，特别是MS_BIND的时候 */
 	struct dentry *mnt_root;	/* root of the mounted tree */
         /* 指向文件系统的超级块 */
 	struct super_block *mnt_sb;	/* pointer to superblock */

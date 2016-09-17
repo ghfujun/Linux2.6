@@ -651,6 +651,7 @@ void kill_litter_super(struct super_block *sb)
 
 EXPORT_SYMBOL(kill_litter_super);
 
+/* 设置块设备超级块的设备指针 */
 static int set_bdev_super(struct super_block *s, void *data)
 {
 	s->s_bdev = data;
@@ -658,6 +659,7 @@ static int set_bdev_super(struct super_block *s, void *data)
 	return 0;
 }
 
+/* 判断超级块和块设备是否对应 */
 static int test_bdev_super(struct super_block *s, void *data)
 {
 	return (void *)s->s_bdev == data;
@@ -673,6 +675,7 @@ static void bdev_uevent(struct block_device *bdev, enum kobject_action action)
 	}
 }
 
+/* 获取块设备的超级块 */
 struct super_block *get_sb_bdev(struct file_system_type *fs_type,
 	int flags, const char *dev_name, void *data,
 	int (*fill_super)(struct super_block *, void *, int))
@@ -815,7 +818,7 @@ do_kern_mount(const char *fstype, int flags, const char *name, void *data)
 		return ERR_PTR(-ENODEV);
 
 	/* 分配一个虚拟挂载点，如sysfs文件系统，则此处的name就是sysfs,
-	  * 如果是普通文件系统则是路径 
+	  * 如果是普通文件系统则是路径，如/dev/dsk/hda1
 	  */
 	mnt = alloc_vfsmnt(name);
 	if (!mnt)

@@ -88,6 +88,7 @@ extern int dir_notify_enable;
 /*
  * These are the fs-independent mount-flags: up to 32 flags are supported
  */
+/* 以只读的方式挂载 */
 #define MS_RDONLY	 1	/* Mount read-only */
 #define MS_NOSUID	 2	/* Ignore suid and sgid bits */
 #define MS_NODEV	 4	/* Disallow access to device special files */
@@ -98,7 +99,7 @@ extern int dir_notify_enable;
 #define MS_DIRSYNC	128	/* Directory modifications are synchronous */
 #define MS_NOATIME	1024	/* Do not update access times. */
 #define MS_NODIRATIME	2048	/* Do not update directory access times */
-#define MS_BIND		4096
+#define MS_BIND		4096           /* 也就是常见的，把一个文件系统中的目录挂载到另一个目录当中 */
 #define MS_MOVE		8192
 #define MS_REC		16384
 #define MS_VERBOSE	32768
@@ -440,7 +441,7 @@ struct inode {
 	unsigned int		i_nlink;              /* 链接的数量 */
 	uid_t			i_uid;
 	gid_t			i_gid;
-	dev_t			i_rdev;
+	dev_t			i_rdev;                  /* inode对应的设备号 */
 	loff_t			i_size;
 	struct timespec		i_atime;
 	struct timespec		i_mtime;
@@ -467,7 +468,7 @@ struct inode {
 	/* These three should probably be a union */
 	struct list_head	i_devices;
 	struct pipe_inode_info	*i_pipe;
-	struct block_device	*i_bdev;
+	struct block_device	*i_bdev;          /* inode对应的设备指针 */
 	struct cdev		*i_cdev;
 	int			i_cindex;
 
@@ -778,7 +779,7 @@ struct super_block {
 	struct export_operations *s_export_op;
 	unsigned long		s_flags;             /* 超级块的挂载标记 */
 	unsigned long		s_magic;
-	/* 超级块的根目录 */
+	/* 超级块的根目录，注意这个根目录有可能和挂载点中的根目录不同  */
 	struct dentry		*s_root;
 	struct rw_semaphore	s_umount;   /* 超级块信号量 */
 	struct semaphore	s_lock;
@@ -795,7 +796,7 @@ struct super_block {
 	struct hlist_head	s_anon;		/* anonymous dentries for (nfs) exporting */
 	struct list_head	s_files;
 
-	struct block_device	*s_bdev;
+	struct block_device	*s_bdev;          /* 对应的块设备指针 */
 	struct list_head	s_instances;       /* 链接同一文件系统中所有超级块 */
 	struct quota_info	s_dquot;	/* Diskquota specific options */
 

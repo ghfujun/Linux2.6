@@ -113,6 +113,7 @@ struct dentry {
 	struct list_head d_alias;	/* inode alias list */
 	unsigned long d_time;		/* used by d_revalidate */
 	struct dentry_operations *d_op;/* 目录操作函数 */
+	/* dentry对应的超级块 */
 	struct super_block *d_sb;	/* The root of the dentry tree */
         /* 例如针对一些内存文件系统，如sysfs具有特定的目录结构struct sysfs_dirent，
           * 那么对于通用的dentry目录会有一个指针指向该结构，其实两个目录是对应的 

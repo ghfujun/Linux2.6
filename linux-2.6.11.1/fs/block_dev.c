@@ -354,6 +354,7 @@ static int bdev_set(struct inode *inode, void *data)
 
 static LIST_HEAD(all_bdevs);
 
+/* 根据设备号，获取块设备信息 */
 struct block_device *bdget(dev_t dev)
 {
 	struct block_device *bdev;

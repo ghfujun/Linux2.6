@@ -134,7 +134,9 @@ static void detach_mnt(struct vfsmount *mnt, struct nameidata *old_nd)
 
 static void attach_mnt(struct vfsmount *mnt, struct nameidata *nd)
 {
+        /* 设置父挂载点 */
 	mnt->mnt_parent = mntget(nd->mnt);
+        /* 设置在父文件系统中，挂载点的目录 */
 	mnt->mnt_mountpoint = dget(nd->dentry);
 	list_add(&mnt->mnt_hash, mount_hashtable+hash(nd->mnt, nd->dentry));
 	list_add_tail(&mnt->mnt_child, &nd->mnt->mnt_mounts);
@@ -157,9 +159,14 @@ static struct vfsmount *next_mnt(struct vfsmount *p, struct vfsmount *root)
 	return list_entry(next, struct vfsmount, mnt_child);
 }
 
+/*  克隆挂载点，当系统中的某一个目录需要挂载到另一个目录时
+  *  那么会将这个目录作为新挂载点的根目录，而挂载点对应的超级块
+  *  的根目录任然是文件系统的根目录 
+  */ 
 static struct vfsmount *
 clone_mnt(struct vfsmount *old, struct dentry *root)
 {
+        /* 注意超级块是共享的 */
 	struct super_block *sb = old->mnt_sb;
         /* 分配一个设备名为mnt_devname的挂载点 */
 	struct vfsmount *mnt = alloc_vfsmnt(old->mnt_devname);
@@ -167,8 +174,10 @@ clone_mnt(struct vfsmount *old, struct dentry *root)
 	if (mnt) {
 		mnt->mnt_flags = old->mnt_flags;
 		atomic_inc(&sb->s_active);
+                /* 设置挂载点的超级块 */
 		mnt->mnt_sb = sb;
 		mnt->mnt_root = dget(root);
+                /* */
 		mnt->mnt_mountpoint = mnt->mnt_root;
 		mnt->mnt_parent = mnt;
 		mnt->mnt_namespace = old->mnt_namespace;
@@ -588,6 +597,9 @@ static struct vfsmount *copy_tree(struct vfsmount *mnt, struct dentry *dentry)
 	return NULL;
 }
 
+/* mnt表示为被挂载目录分配的一个挂载点结构
+  * nd表示挂载点目录的信息  
+  */
 static int graft_tree(struct vfsmount *mnt, struct nameidata *nd)
 {
 	int err;
@@ -629,6 +641,10 @@ out_unlock:
 /*
  * do loopback mount.
  */
+/* 将文件系统中的一个目录挂载到另一个目录上，
+  * 也就是让该目录在另一个 目录中可见 ，其中 
+  * old_name表示需要被挂载的目录 
+  */ 
 static int do_loopback(struct nameidata *nd, char *old_name, int recurse)
 {
 	struct nameidata old_nd;
@@ -638,6 +654,7 @@ static int do_loopback(struct nameidata *nd, char *old_name, int recurse)
 		return err;
 	if (!old_name || !*old_name)
 		return -EINVAL;
+        /* 查找到被挂载目录的信息 */
 	err = path_lookup(old_name, LOOKUP_FOLLOW, &old_nd);
 	if (err)
 		return err;
@@ -771,6 +788,7 @@ out:
  * create a new mount for userspace and request it to be added into the
  * namespace's tree
  */
+/* 把一个设备挂载某个挂载点之上 */
 static int do_new_mount(struct nameidata *nd, char *type, int flags,
 			int mnt_flags, char *name, void *data)
 {
@@ -783,6 +801,7 @@ static int do_new_mount(struct nameidata *nd, char *type, int flags,
 	if (!capable(CAP_SYS_ADMIN))
 		return -EPERM;
 
+        /* 得到一个挂载点， */
 	mnt = do_kern_mount(type, flags, name, data);
 	if (IS_ERR(mnt))
 		return PTR_ERR(mnt);
@@ -801,6 +820,7 @@ int do_add_mount(struct vfsmount *newmnt, struct nameidata *nd,
 
 	down_write(&current->namespace->sem);
 	/* Something was mounted here while we slept */
+        /* 中间可能挂载好几次 */
 	while(d_mountpoint(nd->dentry) && follow_down(&nd->mnt, &nd->dentry))
 		;
 	err = -EINVAL;
@@ -1016,7 +1036,12 @@ int copy_mount_options(const void __user *data, unsigned long *where)
  * Therefore, if this magic number is present, it carries no information
  * and must be discarded.
  */
-/* 内核的真正挂载函数 */
+/* 内核的真正挂载函数
+  * dev_name表示挂载的设备 
+  * dir_name表示挂载点 
+  * type_page表示挂载设备的类型 
+  * flag挂载标记 
+  */
 long do_mount(char * dev_name, char * dir_name, char *type_page,
 		  unsigned long flags, void *data_page)
 {
@@ -1048,6 +1073,7 @@ long do_mount(char * dev_name, char * dir_name, char *type_page,
 	flags &= ~(MS_NOSUID|MS_NOEXEC|MS_NODEV|MS_ACTIVE);
 
 	/* ... and get the mountpoint */
+        /* 根据路径先获取挂载点的信息 */
 	retval = path_lookup(dir_name, LOOKUP_FOLLOW, &nd);
 	if (retval)
 		return retval;
@@ -1056,6 +1082,7 @@ long do_mount(char * dev_name, char * dir_name, char *type_page,
 	if (retval)
 		goto dput_out;
 
+        /* 修改挂载点标记，相当于重新挂载 */
 	if (flags & MS_REMOUNT)
 		retval = do_remount(&nd, flags & ~MS_REMOUNT, mnt_flags,
 				    data_page);
@@ -1160,7 +1187,9 @@ out:
 	return -ENOMEM;
 }
 
-/* 系统挂在函数 */
+/* 系统挂在函数
+  * type表示文件系统的类型 
+  */
 asmlinkage long sys_mount(char __user * dev_name, char __user * dir_name,
 			  char __user * type, unsigned long flags,
 			  void __user * data)
