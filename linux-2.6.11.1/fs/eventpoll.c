@@ -279,7 +279,7 @@ struct epitem {
         struct list_head fllink;
 
 	/* List header used to link the item to the transfer list */
-        /* 在就绪队列中已经被转换的双向链表 */
+        /* 在就绪队列中已经被转换的双向链表，然后将节点从rdllink链表中删除 */
 	struct list_head txlink;
 
 	/*
@@ -1656,7 +1656,7 @@ eventpollfs_get_sb(struct file_system_type *fs_type, int flags,
 	return get_sb_pseudo(fs_type, "eventpoll:", NULL, EVENTPOLLFS_MAGIC);
 }
 
-
+/* eventpoll初始化 */
 static int __init eventpoll_init(void)
 {
 	int error;
